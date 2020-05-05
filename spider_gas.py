@@ -1,16 +1,17 @@
 # TODO Возникают ситуации, что при считывании данных из прибора не находится почасовой срез данных
-#      Необходимо определить и записать в базу ближайщие  по времени значения +1 секунда
+#      Необходимо определить и записать в базу ближайщие по времени значения +1 секунда
 # TODO Запись результата работы в лог
 # TODO Вывод сообщений в дискорд/телеграм/whatsup/viber
 
 # Библитотека для работы с COM портом
 import serial
+# Библиотека для работы со временем (паузы между запросами данных из порта)
 import time
+# Библиотека для работы с датой (для расчета разницы во времени и прибавления времени)
 import datetime
-# Библиотека для расчета контрольной суммы
-import libscrc
 # Библиотека для работы с базой данных MySQL
 import pymysql
+# Библиотека для работы с регулярными выражениями (умная разбибка строки)
 import re
 
 INIT_PORT = b'\x2F\x3F\x21\x0D\x0A'
@@ -19,11 +20,13 @@ CLOSE_DEVICE = b'\x01\x42\x30\x03\x71\x01\x42\x30\x03\x71'
 DEVICE_NAME = b'\x2f\x45\x6c\x73\x36\x45\x4b\x32\x36\x30\x0d\x0a'
 BEGIN_REQ = b'\x01\x52\x33\x02\x33\x3a\x56\x2e\x30\x28\x33\x3b'
 END_REQ = b'1)' + b'\x03'
-DELAY = 5
+DELAY = 1
 NUMBER_OF_ATTEMPTS = 10
 CRC_OK = 'CRC Ok'
+NOT_FOUND = '#0103'
 
 
+# Функция расчитывает разницу в часах между последним временем из базы данных и текущим временем
 def delta_hours(date_end, date_begin):
     if date_begin <= date_end:
         delta_in_hours = (date_end - date_begin).total_seconds() // 3600
@@ -32,12 +35,14 @@ def delta_hours(date_end, date_begin):
         return 0
 
 
+# Функция формирует строку запроса перед расчитыванием контрольного значения CRC
 def create_request_string(begin_request, date_request, end_request):
     date_request_str = str(date_request)[0:10] + ',' + str(date_request)[11:19] + ';'
     request_string_for_calc_crc = begin_request + date_request_str.encode() + date_request_str.encode() + end_request
     return request_string_for_calc_crc
 
 
+# Функция расчитывает контрольное значение CRC
 def calculate_crc(request_string):
     crc_int = request_string[1]
     for item in range(len(request_string) - 2):
@@ -48,6 +53,7 @@ def calculate_crc(request_string):
     return crc
 
 
+# Функция берет последнее значение времени из базы
 def get_last_date_from_database():
     connection = pymysql.connect(host='10.1.1.50',
                                  user='user',
@@ -64,19 +70,22 @@ def get_last_date_from_database():
     return datetime_last
 
 
+# Функция записывает считаные данные в базу
 def insert_values_into_database():  # TODO Insert function
     pass
 
 
-def check_crc_and_date(answer_for_check_crc):               # TODO Дабавить проверку по дате
+# Функция проверки значений по CRC и времени
+def check_crc_and_date(answer_for_check_crc):  # TODO Добавить проверку по дате
     check = split_answer_into_values(answer_for_check_crc)
+    print(check[-2])
     if check[-2] == CRC_OK:
-        print(CRC_OK)
-    else:
-        print('Error')
-    return 0
+        return CRC_OK
+    if check[-2] == NOT_FOUND:
+        return NOT_FOUND
 
 
+# Функция разбивки строки на значения
 def split_answer_into_values(answer):
     values = re.split(r'\)\(|\(|\)', answer.decode())
     # values.remove('')
@@ -89,9 +98,6 @@ def split_answer_into_values(answer):
 
 date_now = datetime.datetime.now()
 date_last = get_last_date_from_database()
-print(delta_hours(date_now, date_last))
-print(date_last)
-print(date_last + datetime.timedelta(minutes=60))
 
 is_read_ok = False
 
@@ -117,13 +123,20 @@ while not is_read_ok and NUMBER_OF_ATTEMPTS > 0:
 
         for hours in range(delta_hours(date_now, date_last)):
             time.sleep(DELAY)
-            request_string = create_request_string(BEGIN_REQ, date_last + datetime.timedelta(minutes=60 * (hours + 1)),
-                                                   END_REQ)
+            date_req = date_last + datetime.timedelta(minutes=60 * (hours + 1))
+            request_string = create_request_string(BEGIN_REQ, date_req, END_REQ)
             crc = calculate_crc(request_string)
             ser.write(request_string + crc)
             time.sleep(DELAY)
-            check_crc_and_date((ser.readall()))
-            insert_values_into_database()
+            answer_from_device = ser.readall()
+            print(answer_from_device)
+            if check_crc_and_date(answer_from_device) == NOT_FOUND:
+                date_req = date_req + datetime.timedelta(seconds=1)
+                request_string = create_request_string(BEGIN_REQ, date_req, END_REQ)
+                crc = calculate_crc(request_string)
+                ser.write(request_string + crc)
+                time.sleep(DELAY)
+                print(ser.readall())
+            else:
+                insert_values_into_database()
         ser.write(CLOSE_DEVICE)
-        time.sleep(DELAY)
-        print(ser.readall())
