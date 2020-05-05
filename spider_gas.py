@@ -12,6 +12,7 @@ import pymysql
 # Библиотека для работы с регулярными выражениями (умная разбибка строки)
 import re
 import logging
+import logging.handlers
 
 INIT_PORT = b'\x2F\x3F\x21\x0D\x0A'
 OPEN_DEVICE = b'\x06\x30\x36\x31\x0D\x0A'
@@ -23,6 +24,18 @@ DELAY = 3
 NUMBER_OF_ATTEMPTS = 10
 CRC_OK = 'CRC Ok'
 NOT_FOUND = '#0103'
+
+
+def log_setup():
+    log_handler = logging.handlers.WatchedFileHandler('spider_gas.log')
+    formatter = logging.Formatter(
+        '%(asctime)s spider_gas.py [%(process)d]: %(message)s',
+        '%b %d %H:%M:%S')
+    formatter.converter = time.gmtime   # if you want UTC time
+    log_handler.setFormatter(formatter)
+    logger = logging.getLogger()
+    logger.addHandler(log_handler)
+    logger.setLevel(logging.DEBUG)
 
 
 # Функция расчитывает разницу в часах между последним временем из базы данных и текущим временем
@@ -38,6 +51,7 @@ def delta_hours(date_end, date_begin):
 def create_request_string(begin_request, date_request, end_request):
     date_request_str = str(date_request)[0:10] + ',' + str(date_request)[11:19] + ';'
     request_string_for_calc_crc = begin_request + date_request_str.encode() + date_request_str.encode() + end_request
+    logging.debug('Сформированная строка для расчета CRC: ' + str(request_string_for_calc_crc))
     return request_string_for_calc_crc
 
 
@@ -49,6 +63,7 @@ def calculate_crc(request_string_for_crc):
         crc_int = crc_int ^ request_string_for_crc[item + 2]
         # print('crc = ' + hex(crc))
     crc = crc_int.to_bytes(1, byteorder='big')
+    logging.debug('Расчитанная котрольная сумма CRC: ' + str(crc))
     return crc
 
 
@@ -64,6 +79,7 @@ def get_last_date_from_database():
             cursor.execute(sql)
             result = cursor.fetchone()
             datetime_last = result[0]
+            logging.debug('Последняя дата из базы данных: ' + str(datetime_last))
     finally:
         connection.close()
     return datetime_last
@@ -121,14 +137,17 @@ def split_answer_into_values(answer):
     return values
 
 
+log_setup()
+
 date_now = datetime.datetime.now()
 date_last = get_last_date_from_database()
 
 is_read_ok = False
 
 while not is_read_ok and NUMBER_OF_ATTEMPTS > 0:
-    with serial.Serial('COM4', 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
+    with serial.Serial('COM5', 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
                        bytesize=serial.SEVENBITS, timeout=1) as ser:
+        logging.info('COM порт открыт')
         ser.write(INIT_PORT)
         time.sleep(DELAY)
         device_name_from_com = ser.readall().hex()
