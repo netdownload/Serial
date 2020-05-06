@@ -1,5 +1,9 @@
-# TODO Запись результата работы в лог
+# TODO Ротация лога
 # TODO Вывод сообщений в дискорд/телеграм/whatsup/viber
+# TODO Проверка по количеству байтов в ответе
+# TODO Проверка на доступность базы данных
+# TODO Вынести настройки порта в константы
+
 
 # Библитотека для работы с COM портом
 import serial
@@ -13,6 +17,7 @@ import pymysql
 import re
 import logging
 import logging.handlers
+import sys
 
 INIT_PORT = b'\x2F\x3F\x21\x0D\x0A'
 OPEN_DEVICE = b'\x06\x30\x36\x31\x0D\x0A'
@@ -27,11 +32,11 @@ NOT_FOUND = '#0103'
 
 
 def log_setup():
-    log_handler = logging.handlers.WatchedFileHandler('spider_gas.log')
+    log_handler = logging.handlers.WatchedFileHandler('spider_gas.txt')
     formatter = logging.Formatter(
         '%(asctime)s spider_gas.py [%(process)d]: %(message)s',
         '%b %d %H:%M:%S')
-    formatter.converter = time.gmtime   # if you want UTC time
+    formatter.converter = time.gmtime  # if you want UTC time
     log_handler.setFormatter(formatter)
     logger = logging.getLogger()
     logger.addHandler(log_handler)
@@ -123,7 +128,6 @@ def insert_values_into_database(answer_for_database):
 # Функция проверки значений по CRC и времени
 def check_crc_and_date(answer_for_check_crc):  # TODO Добавить проверку по дате
     check = split_answer_into_values(answer_for_check_crc)
-    print(check)
     if check[-2] == CRC_OK:
         return CRC_OK
     if check[-2] == NOT_FOUND:
@@ -138,50 +142,69 @@ def split_answer_into_values(answer):
     return values
 
 
+def check_com_port():
+    try:
+        serial.Serial("COM5", 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
+                      bytesize=serial.SEVENBITS, timeout=1)
+        logging.debug('Порт доступен')
+        return 0
+    except serial.serialutil.SerialException:
+        logging.debug('Порт недоступен')
+        sys.exit("Порт недоступен")
+
+
+def check_database_connection():
+    try:
+        pymysql.connect(host='10.1.1.50',
+                        user='user',
+                        password='qwerty123',
+                        db='resources')
+        logging.debug('База данных доступна')
+    except pymysql.err.OperationalError:
+        logging.debug('База данных недоступна')
+        sys.exit("База данных недоступна")
+
+
 log_setup()
+
 logging.debug('---------------------------------------')
+
+check_com_port()
+check_database_connection()
+
 date_now = datetime.datetime.now()
 date_last = get_last_date_from_database()
 
-is_read_ok = False
+with serial.Serial('COM5', 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
+                   bytesize=serial.SEVENBITS, timeout=1) as ser:
+    logging.debug('COM порт открыт')
+    ser.write(INIT_PORT)
+    time.sleep(DELAY)
+    ser.readall()
+    time.sleep(DELAY)
+    ser.write(OPEN_DEVICE)
+    time.sleep(DELAY)
+    ser.readall()
+    time.sleep(DELAY)
 
-while not is_read_ok and NUMBER_OF_ATTEMPTS > 0:
-    with serial.Serial('COM5', 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
-                       bytesize=serial.SEVENBITS, timeout=1) as ser:
-        logging.debug('COM порт открыт')
-        ser.write(INIT_PORT)
+    for hours in range(delta_hours(date_now, date_last)):
         time.sleep(DELAY)
-        device_name_from_com = ser.readall().hex()
-
-        if device_name_from_com == DEVICE_NAME.hex():
-            is_read_ok = True
-        else:
-            is_read_ok = False
-            NUMBER_OF_ATTEMPTS -= 1
-            ser.write(CLOSE_DEVICE)
-
-        ser.write(OPEN_DEVICE)
+        date_req = date_last + datetime.timedelta(minutes=60 * (hours + 1))
+        request_string = create_request_string(BEGIN_REQ, date_req, END_REQ)
+        crc = calculate_crc(request_string)
+        ser.write(request_string + crc)
         time.sleep(DELAY)
-        time.sleep(DELAY)
+        answer_from_device = ser.readall()
 
-        for hours in range(delta_hours(date_now, date_last)):
-            time.sleep(DELAY)
-            date_req = date_last + datetime.timedelta(minutes=60 * (hours + 1))
+        if check_crc_and_date(answer_from_device) == NOT_FOUND:
+            # TODO Что делать в датой больше на 1 секунду, какое значение писать в базу и как проверять
+            date_req = date_req + datetime.timedelta(seconds=1)
             request_string = create_request_string(BEGIN_REQ, date_req, END_REQ)
             crc = calculate_crc(request_string)
             ser.write(request_string + crc)
             time.sleep(DELAY)
             answer_from_device = ser.readall()
-
-            if check_crc_and_date(answer_from_device) == NOT_FOUND:
-                # TODO Что делать в датой больше на 1 секунду, какое значение писать в базу и как проверять
-                date_req = date_req + datetime.timedelta(seconds=1)
-                request_string = create_request_string(BEGIN_REQ, date_req, END_REQ)
-                crc = calculate_crc(request_string)
-                ser.write(request_string + crc)
-                time.sleep(DELAY)
-                answer_from_device = ser.readall()
-                logging.debug('Полученные данные со счетчика: ' + str(answer_from_device))
-            insert_values_into_database(split_answer_into_values(answer_from_device))
-        ser.write(CLOSE_DEVICE)
-        logging.debug('COM порт закрыт')
+        logging.debug('Полученные данные со счетчика: ' + str(answer_from_device))
+        insert_values_into_database(split_answer_into_values(answer_from_device))
+    ser.write(CLOSE_DEVICE)
+    logging.debug('COM порт закрыт')
