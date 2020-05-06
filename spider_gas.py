@@ -42,8 +42,10 @@ def log_setup():
 def delta_hours(date_end, date_begin):
     if date_begin <= date_end:
         delta_in_hours = (date_end - date_begin).total_seconds() // 3600
+        logging.debug('Разница в часах: ' + str(delta_in_hours))
         return int(delta_in_hours)
     else:
+        logging.debug('Разница в часах равна нулю или последнее время из базы <= текущему времени')
         return 0
 
 
@@ -59,9 +61,7 @@ def create_request_string(begin_request, date_request, end_request):
 def calculate_crc(request_string_for_crc):
     crc_int = request_string_for_crc[1]
     for item in range(len(request_string_for_crc) - 2):
-        # print(hex(request_string_for_crc[item + 2]))
         crc_int = crc_int ^ request_string_for_crc[item + 2]
-        # print('crc = ' + hex(crc))
     crc = crc_int.to_bytes(1, byteorder='big')
     logging.debug('Расчитанная котрольная сумма CRC: ' + str(crc))
     return crc
@@ -115,6 +115,7 @@ def insert_values_into_database(answer_for_database):
                                  answer_for_database[16], answer_for_database[18], gas_v_r_p,
                                  gas_v_st_p, gas_mark_gray))
             connection.commit()
+            logging.debug('Запись значений в базу')
     finally:
         connection.close()
 
@@ -138,7 +139,7 @@ def split_answer_into_values(answer):
 
 
 log_setup()
-
+logging.debug('---------------------------------------')
 date_now = datetime.datetime.now()
 date_last = get_last_date_from_database()
 
@@ -147,7 +148,7 @@ is_read_ok = False
 while not is_read_ok and NUMBER_OF_ATTEMPTS > 0:
     with serial.Serial('COM5', 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
                        bytesize=serial.SEVENBITS, timeout=1) as ser:
-        logging.info('COM порт открыт')
+        logging.debug('COM порт открыт')
         ser.write(INIT_PORT)
         time.sleep(DELAY)
         device_name_from_com = ser.readall().hex()
@@ -161,7 +162,6 @@ while not is_read_ok and NUMBER_OF_ATTEMPTS > 0:
 
         ser.write(OPEN_DEVICE)
         time.sleep(DELAY)
-        print(ser.readall())
         time.sleep(DELAY)
 
         for hours in range(delta_hours(date_now, date_last)):
@@ -181,6 +181,7 @@ while not is_read_ok and NUMBER_OF_ATTEMPTS > 0:
                 ser.write(request_string + crc)
                 time.sleep(DELAY)
                 answer_from_device = ser.readall()
-            print(answer_from_device)
+                logging.debug('Полученные данные со счетчика: ' + str(answer_from_device))
             insert_values_into_database(split_answer_into_values(answer_from_device))
         ser.write(CLOSE_DEVICE)
+        logging.debug('COM порт закрыт')
