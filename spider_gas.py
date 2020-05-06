@@ -1,7 +1,6 @@
 # TODO Ротация лога
 # TODO Вывод сообщений в дискорд/телеграм/whatsup/viber
 # TODO Проверка по количеству байтов в ответе
-# TODO Проверка на доступность базы данных
 # TODO Вынести настройки порта в константы
 
 
@@ -13,10 +12,12 @@ import time
 import datetime
 # Библиотека для работы с базой данных MySQL
 import pymysql
-# Библиотека для работы с регулярными выражениями (умная разбибка строки)
+# Библиотека для работы с регулярными выражениями (умная разбивка строки)
 import re
+# Библиотека для работы с логаи
 import logging
 import logging.handlers
+
 import sys
 
 INIT_PORT = b'\x2F\x3F\x21\x0D\x0A'
@@ -31,6 +32,8 @@ CRC_OK = 'CRC Ok'
 NOT_FOUND = '#0103'
 
 
+# TODO настроить время ротации и поправить отображение лога (время, дата)
+# Функция для настройки логирования
 def log_setup():
     log_handler = logging.handlers.WatchedFileHandler('spider_gas.txt')
     formatter = logging.Formatter(
@@ -142,6 +145,7 @@ def split_answer_into_values(answer):
     return values
 
 
+# Функция для проверки доступности COM порта
 def check_com_port():
     try:
         serial.Serial("COM5", 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
@@ -153,6 +157,7 @@ def check_com_port():
         sys.exit("Порт недоступен")
 
 
+# Функция для проверки доступности базы данных
 def check_database_connection():
     try:
         pymysql.connect(host='10.1.1.50',
@@ -169,6 +174,7 @@ log_setup()
 
 logging.debug('---------------------------------------')
 
+# Проверяем доступность COM порта и базы данных, в случае неудачи выходим из программы
 check_com_port()
 check_database_connection()
 
