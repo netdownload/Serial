@@ -11,6 +11,7 @@ import datetime
 import pymysql
 # Библиотека для работы с регулярными выражениями (умная разбибка строки)
 import re
+import logging
 
 INIT_PORT = b'\x2F\x3F\x21\x0D\x0A'
 OPEN_DEVICE = b'\x06\x30\x36\x31\x0D\x0A'
