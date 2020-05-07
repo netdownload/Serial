@@ -1,12 +1,12 @@
 # Библитотека для работы с COM портом
-import serial
-import time
 import datetime
+import time
+
 # Библиотека для расчета контрольной суммы
 import libscrc
 # Библиотека для работы с базой данных MySQL
 import pymysql
-
+import serial
 
 INIT_PORT = b'\x00\x00\x01\xB0'
 INIT_PORT2 = b'\x00\x01\x01\x01\x01\x01\x01\x01\x01\x77\x81'

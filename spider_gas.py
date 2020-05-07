@@ -4,21 +4,21 @@
 # TODO Вынести настройки порта в константы
 
 
-# Библитотека для работы с COM портом
-import serial
-# Библиотека для работы со временем (паузы между запросами данных из порта)
-import time
 # Библиотека для работы с датой (для расчета разницы во времени и прибавления времени)
 import datetime
-# Библиотека для работы с базой данных MySQL
-import pymysql
-# Библиотека для работы с регулярными выражениями (умная разбивка строки)
-import re
 # Библиотека для работы с логаи
 import logging
 import logging.handlers
+# Библиотека для работы с регулярными выражениями (умная разбивка строки)
+import re
 
 import sys
+# Библиотека для работы со временем (паузы между запросами данных из порта)
+import time
+# Библиотека для работы с базой данных MySQL
+import pymysql
+# Библитотека для работы с COM портом
+import serial
 
 INIT_PORT = b'\x2F\x3F\x21\x0D\x0A'
 OPEN_DEVICE = b'\x06\x30\x36\x31\x0D\x0A'
@@ -26,7 +26,7 @@ CLOSE_DEVICE = b'\x01\x42\x30\x03\x71\x01\x42\x30\x03\x71'
 DEVICE_NAME = b'\x2f\x45\x6c\x73\x36\x45\x4b\x32\x36\x30\x0d\x0a'
 BEGIN_REQ = b'\x01\x52\x33\x02\x33\x3a\x56\x2e\x30\x28\x33\x3b'
 END_REQ = b'1)' + b'\x03'
-DELAY = 3
+DELAY = 2
 NUMBER_OF_ATTEMPTS = 10
 CRC_OK = 'CRC Ok'
 NOT_FOUND = '#0103'
@@ -70,9 +70,9 @@ def calculate_crc(request_string_for_crc):
     crc_int = request_string_for_crc[1]
     for item in range(len(request_string_for_crc) - 2):
         crc_int = crc_int ^ request_string_for_crc[item + 2]
-    crc = crc_int.to_bytes(1, byteorder='big')
-    logging.debug('Расчитанная котрольная сумма CRC: ' + str(crc))
-    return crc
+    crc_calc = crc_int.to_bytes(1, byteorder='big')
+    logging.debug('Расчитанная котрольная сумма CRC: ' + str(crc_calc))
+    return crc_calc
 
 
 # Функция берет последнее значение времени из базы
@@ -149,7 +149,7 @@ def split_answer_into_values(answer):
 def check_com_port():
     try:
         serial.Serial("COM5", 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
-                      bytesize=serial.SEVENBITS, timeout=1)
+                      bytesize=serial.SEVENBITS, timeout=None)
         logging.debug('Порт доступен')
         return 0
     except serial.serialutil.SerialException:
