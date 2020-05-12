@@ -30,6 +30,10 @@ DELAY = 2
 NUMBER_OF_ATTEMPTS = 10
 CRC_OK = 'CRC Ok'
 NOT_FOUND = '#0103'
+DATABASE_HOST = '10.1.1.50'
+DATABASE_USER = 'user'
+DATABASE_PASSWORD = 'qwerty123'
+DATABASE = 'resources'
 
 
 # TODO настроить время ротации и поправить отображение лога (время, дата)
@@ -77,10 +81,10 @@ def calculate_crc(request_string_for_crc):
 
 # Функция берет последнее значение времени из базы
 def get_last_date_from_database():
-    connection = pymysql.connect(host='10.1.1.50',
-                                 user='user',
-                                 password='qwerty123',
-                                 db='resources')
+    connection = pymysql.connect(host=DATABASE_HOST,
+                                 user=DATABASE_USER,
+                                 password=DATABASE_PASSWORD,
+                                 db=DATABASE)
     try:
         with connection.cursor() as cursor:
             sql = 'SELECT gas_datetime FROM gas ORDER BY gas_datetime DESC LIMIT 0, 1'
@@ -96,10 +100,10 @@ def get_last_date_from_database():
 # Функция записывает считаные данные в базу
 def insert_values_into_database(answer_for_database):
     gas_mark_gray = 1  # TODO прочитать в документации почему маркируется серым
-    connection = pymysql.connect(host='10.1.1.50',
-                                 user='user',
-                                 password='qwerty123',
-                                 db='resources')
+    connection = pymysql.connect(host=DATABASE_HOST,
+                                 user=DATABASE_USER,
+                                 password=DATABASE_PASSWORD,
+                                 db=DATABASE)
     try:
         with connection.cursor() as cursor:
             sql = 'SELECT `gas_v_r_s`, `gas_v_st_s` FROM `gas` ORDER BY gas_datetime DESC LIMIT 0, 1'
@@ -160,10 +164,10 @@ def check_com_port():
 # Функция для проверки доступности базы данных
 def check_database_connection():
     try:
-        pymysql.connect(host='10.1.1.50',
-                        user='user',
-                        password='qwerty123',
-                        db='resources')
+        pymysql.connect(host=DATABASE_HOST,
+                        user=DATABASE_USER,
+                        password=DATABASE_PASSWORD,
+                        db=DATABASE)
         logging.debug('База данных доступна')
     except pymysql.err.OperationalError:
         logging.debug('База данных недоступна')
