@@ -30,6 +30,8 @@ DELAY = 2
 NUMBER_OF_ATTEMPTS = 10
 CRC_OK = 'CRC Ok'
 NOT_FOUND = '#0103'
+COM = 'COM5'
+COM_SPEED = 19200
 DATABASE_HOST = '10.1.1.50'
 DATABASE_USER = 'user'
 DATABASE_PASSWORD = 'qwerty123'
@@ -152,7 +154,7 @@ def split_answer_into_values(answer):
 # Функция для проверки доступности COM порта
 def check_com_port():
     try:
-        serial.Serial("COM5", 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
+        serial.Serial(COM, COM_SPEED, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
                       bytesize=serial.SEVENBITS, timeout=None)
         logging.debug('Порт доступен')
         return 0
@@ -185,7 +187,7 @@ check_database_connection()
 date_now = datetime.datetime.now()
 date_last = get_last_date_from_database()
 
-with serial.Serial('COM5', 19200, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
+with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_EVEN, stopbits=serial.STOPBITS_ONE,
                    bytesize=serial.SEVENBITS, timeout=1) as ser:
     logging.debug('COM порт открыт')
     ser.write(INIT_PORT)
