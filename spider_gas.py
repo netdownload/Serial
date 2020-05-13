@@ -32,7 +32,7 @@ CRC_OK = 'CRC Ok'
 NOT_FOUND = '#0103'
 COM = 'COM5'
 COM_SPEED = 19200
-DATABASE_HOST = '10.1.1.50'
+DATABASE_HOST = '10.1.1.99'
 DATABASE_USER = 'user'
 DATABASE_PASSWORD = 'qwerty123'
 DATABASE = 'resources'
@@ -45,7 +45,7 @@ def log_setup():
     formatter = logging.Formatter(
         '%(asctime)s spider_gas.py [%(process)d]: %(message)s',
         '%b %d %H:%M:%S')
-    formatter.converter = time.gmtime  # if you want UTC time
+    formatter.converter = time.gmtime # if you want UTC time
     log_handler.setFormatter(formatter)
     logger = logging.getLogger()
     logger.addHandler(log_handler)
