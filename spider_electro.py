@@ -11,7 +11,8 @@ import serial
 import sys
 
 DEVICE_NUMBER = b'\x5E'
-INIT_PORT = b'\x00\x01\x01\x01\x01\x01\x01\x01\x01'
+TEST_PORT = DEVICE_NUMBER + b'\x00' # запрос на тестирование порта, в ответе должно прийти то же значение
+INIT_PORT = DEVICE_NUMBER  + b'\x01\x01\x01\x01\x01\x01\x01\x01'
 DELAY = 0.1
 COM = 'COM9'
 COM_SPEED = 9600
@@ -23,6 +24,8 @@ DATABASE = 'resources'
 
 crc16 = libscrc.modbus(INIT_PORT)
 init_port_with_crc = INIT_PORT + crc16.to_bytes(2, byteorder='little')
+crc16 = libscrc.modbus(TEST_PORT)
+test_port_with_crc = TEST_PORT + crc16.to_bytes(2, byteorder='little')
 
 # TODO настроить время ротации и поправить отображение лога (время, дата)
 # Функция для настройки логирования
