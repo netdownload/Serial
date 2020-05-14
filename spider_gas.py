@@ -209,7 +209,8 @@ with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_EVEN, stopbits=serial.ST
         answer_from_device = ser.readall()
 
         if check_crc_and_date(answer_from_device) == NOT_FOUND:
-            # TODO Что делать в датой больше на 1 секунду, какое значение писать в базу и как проверять
+            # TODO Что делать в датой больше на 1 секунду, какое значение писать в базу и как проверять  - в базу
+            #  надо писать время без дополнительных секунд
             date_req = date_req + datetime.timedelta(seconds=1)
             request_string = create_request_string(BEGIN_REQ, date_req, END_REQ)
             crc = calculate_crc(request_string)

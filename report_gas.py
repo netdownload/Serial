@@ -23,6 +23,10 @@ MSO_TEXT = '2,310'  # Максимальный суточный объем
 MSO = 2.310
 TEST_DATE_BEGIN = '01.04.2020'
 TEST_DATE_END = '01.05.2020'
+DATABASE_HOST = '10.1.1.50'
+DATABASE_USER = 'user'
+DATABASE_PASSWORD = 'qwerty123'
+DATABASE = 'resources'
 
 
 def format_text(cell_t_b, cell_t_e, row_t_b, row_t_e, font_t, bold_t, italic_t, size_t, table_alignment,
