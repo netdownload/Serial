@@ -15,7 +15,7 @@ TEST_PORT = DEVICE_NUMBER + b'\x00'  # запрос на тестировани�
 INIT_PORT = DEVICE_NUMBER + b'\x01\x01\x01\x01\x01\x01\x01\x01'
 DATE_MEMORY_REQUEST = DEVICE_NUMBER + b'\x08\x13'
 # В ответе проверить байт стостояния, возможно он отвечает за то какой банк памяти брать
-DELAY = 0.1
+DELAY = 0.2
 COM = 'COM6'
 COM_SPEED = 9600
 DATABASE_HOST = '10.1.1.99'
@@ -108,7 +108,6 @@ def get_date_memory_from_device():
         return date_memory_answer_hex
 
 
-# Функция расчитывает разницу в часах между последним временем из базы данных и текущим временем
 def delta_period(date_end, date_begin):
     if date_begin <= date_end:
         delta_in_period = (date_end - date_begin).total_seconds() // 3600 * 2
@@ -120,9 +119,10 @@ def delta_period(date_end, date_begin):
 
 
 def split_result_datetime(power_profile_answer):
-    result_datetime = hex(power_profile_answer[6])[2:4] + '.' + hex(power_profile_answer[5])[2:4] + '.' + hex(
-        power_profile_answer[4])[2:4] + ' ' + hex(power_profile_answer[2])[2:4] + ':' + hex(
+    result_datetime = hex(power_profile_answer[4])[2:4] + '.' + hex(power_profile_answer[5])[2:4] + '.' + hex(
+        power_profile_answer[6])[2:4] + ' ' + hex(power_profile_answer[2])[2:4] + ':' + hex(
         power_profile_answer[3])[2:4]
+    print(result_datetime)
     result_datetime_object = datetime.datetime.strptime(result_datetime, '%d.%m.%y %H:%M')
     return result_datetime_object
 
@@ -142,43 +142,72 @@ def split_reactive_power(power_profile_answer):
 def get_start_memory(memory_from_device, delta_in_period):
     int_memory = int.from_bytes(memory_from_device, byteorder='big')
     start_memory = int_memory - delta_in_period * PERIOD_HEX
-    start_memory_hex = start_memory.to_bytes(2, byteorder='little')
+    start_memory_hex = start_memory.to_bytes(2, byteorder='big')
     return start_memory_hex
 
 
+def get_next_memory(memory):
+    int_memory = int.from_bytes(memory, byteorder='big')
+    next_memory = int_memory + PERIOD_HEX
+    next_memory_hex = next_memory.to_bytes(2, byteorder='big')
+    return next_memory_hex
+
+
+def create_profile_request(memory_request):
+    power_profile_request = DEVICE_NUMBER + MEMORY_BANK1 + memory_request + PERIOD
+    crc16 = libscrc.modbus(power_profile_request)
+    power_profile_request_with_crc = power_profile_request + crc16.to_bytes(2, byteorder='little')
+    return power_profile_request_with_crc
+
+
+# TODO Функция проверки перехода с одного банка памяти на другой
+def check_memory_bank():
+    pass
+
+
+# Функция записывает считаные данные в базу
+def insert_values_into_database(gas_datetime, active_power, reactive_power):
+    connection = pymysql.connect(host=DATABASE_HOST,
+                                 user=DATABASE_USER,
+                                 password=DATABASE_PASSWORD,
+                                 db=DATABASE)
+    try:
+        with connection.cursor() as cursor:
+            sql = "INSERT INTO `electro42` (`electro42_datetime`, `electro42_active`, `electro42_reactive`) VALUES (" \
+                  "%s, %s, %s)"
+            cursor.execute(sql, (gas_datetime, active_power, reactive_power))
+            connection.commit()
+            logging.debug('Запись значений в базу')
+    finally:
+        connection.close()
+
+
 check_com_port()
+
 date_memory_answer_hex = get_date_memory_from_device()
 convert_date(date_memory_answer_hex)
 memory_hex = convert_memory(date_memory_answer_hex)
 delta_period_int = delta_period(convert_date(date_memory_answer_hex), get_last_date_from_database())
-print(get_start_memory(memory_hex, delta_period_int))
+memory_start = get_start_memory(memory_hex, delta_period_int)
 
-# byte_memory = int_memory.to_bytes(2, byteorder='big')
+with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+                   bytesize=serial.EIGHTBITS, timeout=1) as ser:
+    logging.debug('COM порт открыт')
+    ser.write(init_port_with_crc)
+    time.sleep(DELAY)
+    ser.readall()
+    for period in range(delta_period_int + 1):
+        power_profile_request_with_crc = create_profile_request(memory_start)
+        time.sleep(DELAY)
+        ser.write(power_profile_request_with_crc)
+        time.sleep(DELAY)
+        power_profile_answer_from_device = ser.readall()
+        time.sleep(DELAY)
 
+        gas_datetime = split_result_datetime(power_profile_answer_from_device)
+        active_power = split_active_power(power_profile_answer_from_device)
+        reactive_power = split_reactive_power(power_profile_answer_from_device)
+        memory_start = get_next_memory(memory_start)
 
-power_profile_request = DEVICE_NUMBER + MEMORY_BANK1 + convert_memory(date_memory_answer_hex) + PERIOD
-crc16 = libscrc.modbus(power_profile_request)
-power_profile_request_with_crc = power_profile_request + crc16.to_bytes(2, byteorder='little')
-
-# with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
-#                    bytesize=serial.EIGHTBITS, timeout=1) as ser:
-#     logging.debug('COM порт открыт')
-#     ser.write(init_port_with_crc)
-#     time.sleep(DELAY)
-#     ser.readall()
-#     time.sleep(DELAY)
-#     ser.write(power_profile_request_with_crc)
-#     time.sleep(DELAY)
-#     power_profile_answer_from_device = ser.readall()
-#     time.sleep(DELAY)
-#     ser.write(byte_memory)
-#     time.sleep(DELAY)
-#     ser.readall()
-#     time.sleep(DELAY)
-#     # for period in range(delta_period_int + 1):
-#     #     print(period)
-#     logging.debug('COM порт закрыт')
-#
-# print(split_result_datetime(power_profile_answer_from_device))
-# print(split_active_power(power_profile_answer_from_device))
-# print(split_reactive_power(power_profile_answer_from_device))
+        insert_values_into_database(gas_datetime, active_power, reactive_power)
+    logging.debug('COM порт закрыт')
