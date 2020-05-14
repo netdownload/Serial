@@ -1,3 +1,10 @@
+# bd 1d f3 09 22 30 14 05 20 1e 6f 54
+# Не понятно как рассчитывать последнюю запись в ячейке
+# Возможно надо ориентироваться по 3 байту "09" и брать ячейку d f3 0
+# в этом случае будет использоваться банк памяти 83
+# Если 3 байт равен "19" то брать ячейку 1d f3 (в этом случае тут будет значение кратное 16), банк памяти брать 03
+# В документации данного момента не нашел
+
 # Библитотека для работы с COM портом
 import datetime
 import time
@@ -10,13 +17,15 @@ import pymysql
 import serial
 import sys
 
-DEVICE_NUMBER = b'\x5E'
+# DEVICE_NUMBER = b'\x5E'   # Очистные
+DEVICE_NUMBER = b'\xBD'  # ТП-2
+
 TEST_PORT = DEVICE_NUMBER + b'\x00'  # запрос на тестирование порта, в ответе должно прийти то же значение
 INIT_PORT = DEVICE_NUMBER + b'\x01\x01\x01\x01\x01\x01\x01\x01'
 DATE_MEMORY_REQUEST = DEVICE_NUMBER + b'\x08\x13'
 # В ответе проверить байт стостояния, возможно он отвечает за то какой банк памяти брать
 DELAY = 0.2
-COM = 'COM6'
+COM = 'COM7'
 COM_SPEED = 9600
 DATABASE_HOST = '10.1.1.99'
 DATABASE_USER = 'user'
@@ -82,7 +91,7 @@ def get_last_date_from_database():
                                  db=DATABASE)
     try:
         with connection.cursor() as cursor:
-            sql = 'SELECT electro42_datetime FROM electro42 ORDER BY electro42_datetime DESC LIMIT 0, 1'
+            sql = 'SELECT electro56_datetime FROM electro56 ORDER BY electro56_datetime DESC LIMIT 0, 1'
             cursor.execute(sql)
             result = cursor.fetchone()
             datetime_last = result[0]
@@ -141,7 +150,9 @@ def split_reactive_power(power_profile_answer):
 
 def get_start_memory(memory_from_device, delta_in_period):
     int_memory = int.from_bytes(memory_from_device, byteorder='big')
+    print(int_memory)
     start_memory = int_memory - delta_in_period * PERIOD_HEX
+    print(start_memory)
     start_memory_hex = start_memory.to_bytes(2, byteorder='big')
     return start_memory_hex
 
@@ -173,7 +184,7 @@ def insert_values_into_database(gas_datetime, active_power, reactive_power):
                                  db=DATABASE)
     try:
         with connection.cursor() as cursor:
-            sql = "INSERT INTO `electro42` (`electro42_datetime`, `electro42_active`, `electro42_reactive`) VALUES (" \
+            sql = "INSERT INTO `electro56` (`electro56_datetime`, `electro56_active`, `electro56_reactive`) VALUES (" \
                   "%s, %s, %s)"
             cursor.execute(sql, (gas_datetime, active_power, reactive_power))
             connection.commit()
@@ -185,9 +196,12 @@ def insert_values_into_database(gas_datetime, active_power, reactive_power):
 check_com_port()
 
 date_memory_answer_hex = get_date_memory_from_device()
-convert_date(date_memory_answer_hex)
+print(date_memory_answer_hex)
+print(convert_date(date_memory_answer_hex))
 memory_hex = convert_memory(date_memory_answer_hex)
+print(memory_hex)
 delta_period_int = delta_period(convert_date(date_memory_answer_hex), get_last_date_from_database())
+print(delta_period_int)
 memory_start = get_start_memory(memory_hex, delta_period_int)
 
 with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
@@ -209,5 +223,5 @@ with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.ST
         reactive_power = split_reactive_power(power_profile_answer_from_device)
         memory_start = get_next_memory(memory_start)
 
-        insert_values_into_database(gas_datetime, active_power, reactive_power)
+    #     insert_values_into_database(gas_datetime, active_power, reactive_power)
     logging.debug('COM порт закрыт')
