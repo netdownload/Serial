@@ -139,7 +139,7 @@ def delta_period(date_end, date_begin):
 
 
 def split_result_datetime(power_profile_answer):
-    # TODO Обработать исколючение, если в ответе будет '', т.е. из порта не поступят данные
+    # TODO Обработать исключение, если в ответе будет '', т.е. из порта не поступят данные
     result_datetime = hex(power_profile_answer[4])[2:4] + '.' + hex(power_profile_answer[5])[2:4] + '.' + hex(
         power_profile_answer[6])[2:4] + ' ' + hex(power_profile_answer[2])[2:4] + ':' + hex(
         power_profile_answer[3])[2:4]
