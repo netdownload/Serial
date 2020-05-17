@@ -294,6 +294,9 @@ for cells in range(0, 24, 1):
     worksheet2.write(5, cells + 2, str(cells) + '.00-' + str(cells + 1) + '.00', format_center)
 
 for rows in range(0, 31, 1):
+    worksheet2.write(rows + 6, 1, rows + 1, format_center)
+
+for rows in range(0, 31, 1):
     # TODO Попробовать цикл по алфавиту
     #  https://stackoverflow.com/questions/17182656/how-do-i-iterate-through-the-alphabet
     worksheet2.write(rows + 6, 2, '=Worksheet!C' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!C' + str(rows + 41)
@@ -348,4 +351,6 @@ for rows in range(0, 31, 1):
 worksheet2.write('Y38', 'Сумма', format_left)
 worksheet2.write('Z38', '=SUM(C7:Z37)', format_right_bold)
 
+worksheet2.write('Q41', 'М.П.')
+worksheet2.write('B41', ENGINEER + NAME)
 workbook.close()
