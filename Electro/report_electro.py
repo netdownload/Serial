@@ -7,6 +7,9 @@ import datetime
 import time
 
 COMPANY = 'ОАО "Аньковское"'
+ENGINEER = 'Главный энергетик_______________'
+NAME = 'Кабанов С.В.'
+CONTRACT_NUMBER = '29'
 # TODO Месяц и год надо брать из запроса
 MONTH = 'Апрель'
 YEAR = 2020
@@ -154,6 +157,14 @@ format_center = workbook.add_format({
     'text_wrap': 1,
 })
 
+format_center_without_borders = workbook.add_format({
+    'bold': 0,
+    'border': 0,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+})
+
 format_right = workbook.add_format({
     'bold': 0,
     'border': 1,
@@ -177,6 +188,7 @@ format_left = workbook.add_format({
     'valign': 'vcenter',
     'text_wrap': 1,
 })
+
 
 worksheet.set_column('A:A', 23.3)
 worksheet.set_column('B:Z', 11.3)
@@ -214,7 +226,7 @@ for rows in range(0, int((delta + 1) / 24 / 2), 1):
         cells_in += 2
 
 worksheet.write('Y38', 'ИТОГО', format_left)
-worksheet.write('Z38', '=SUM(C7:Z37)*B4', format_right_bold)
+worksheet.write('Z38', '=SUM(C7:Z37)*' + str(RATIO1), format_right_bold)
 
 worksheet.write('A39', 'Счетчик №')
 worksheet.write('B39', DEVICE_NUMBER2, bold)
@@ -235,7 +247,7 @@ for rows in range(0, int((delta + 1) / 24 / 2), 1):
         cells_in += 2
 
 worksheet.write('Y72', 'ИТОГО', format_left)
-worksheet.write('Z72', '=SUM(C41:Z71)*B40', format_right_bold)
+worksheet.write('Z72', '=SUM(C41:Z71)*' + str(RATIO2), format_right_bold)
 
 worksheet.write('A73', 'Счетчик №')
 worksheet.write('B73', DEVICE_NUMBER3, bold)
@@ -257,6 +269,83 @@ for rows in range(0, int((delta + 1) / 24 / 2), 1):
         cells_in += 2
 
 worksheet.write('Y106', 'ИТОГО', format_left)
-worksheet.write('Z106', '=SUM(C75:Z105)*B74', format_right_bold)
+worksheet.write('Z106', '=SUM(C75:Z105)*' + str(RATIO3), format_right_bold)
+
+worksheet.write('B109', ENGINEER + NAME)
+
+# -----------------NEXT SHEET 'Summa'-----------------
+
+worksheet2 = workbook.add_worksheet()
+worksheet2.name = 'Summa'
+
+worksheet2.set_column('A:A', 2.3)
+worksheet2.set_column('B:Z', 11.3)
+
+worksheet2.merge_range('A1:Z1', 'Сведения', format_center_without_borders)
+worksheet2.merge_range('G2:T2', 'о фактическом почасовом расходе электрической энергии за Апрель 2020 года ОАО '
+                                '"Аньковское"', format_center_without_borders)
+worksheet2.merge_range('B3:D3', 'Договор №' + CONTRACT_NUMBER)
+worksheet2.merge_range('B5:B6', 'Число расчетного месяца', format_center)
+worksheet2.merge_range('C5:Z5', 'Время суток', format_center)
+worksheet2.merge_range('X3:Z3', 'Уровень СН2')
+
+
+for cells in range(0, 24, 1):
+    worksheet2.write(5, cells + 2, str(cells) + '.00-' + str(cells + 1) + '.00', format_center)
+
+for rows in range(0, 31, 1):
+    # TODO Попробовать цикл по алфавиту
+    #  https://stackoverflow.com/questions/17182656/how-do-i-iterate-through-the-alphabet
+    worksheet2.write(rows + 6, 2, '=Worksheet!C' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!C' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!C' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 3, '=Worksheet!D' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!D' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!D' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 4, '=Worksheet!E' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!E' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!E' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 5, '=Worksheet!F' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!F' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!F' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 6, '=Worksheet!G' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!G' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!G' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 7, '=Worksheet!H' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!H' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!H' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 8, '=Worksheet!I' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!I' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!I' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 9, '=Worksheet!J' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!I' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!I' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 10, '=Worksheet!K' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!K' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!K' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6,11, '=Worksheet!L' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!L' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!L' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 12, '=Worksheet!M' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!M' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!M' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 13, '=Worksheet!N' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!N' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!N' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 14, '=Worksheet!O' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!P' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!O' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 15, '=Worksheet!P' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!P' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!P' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 16, '=Worksheet!Q' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!Q' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!Q' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 17, '=Worksheet!R' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!R' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!R' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 18, '=Worksheet!S' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!S' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!S' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 19, '=Worksheet!T' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!T' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!T' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 20, '=Worksheet!U' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!U' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!U' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 21, '=Worksheet!V' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!V' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!V' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 22, '=Worksheet!W' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!W' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!W' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 23, '=Worksheet!X' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!X' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!X' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 24, '=Worksheet!Y' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!Y' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!Y' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 25, '=Worksheet!Z' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!Z' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!Z' + str(rows + 75) + '*' + str(RATIO3), format_right)
+
+worksheet2.write('Y38', 'Сумма', format_left)
+worksheet2.write('Z38', '=SUM(C7:Z37)', format_right_bold)
 
 workbook.close()
