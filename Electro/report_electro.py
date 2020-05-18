@@ -32,9 +32,10 @@ RATIO2 = 120
 RATIO3 = 20
 # --------------------------
 DELAY = 0.2
-COM = 'COM6'
+COM = 'COM2'
 COM_SPEED = 9600
-DEVICE_NUMBER = b'\x5E'  # Очистные
+# DEVICE_NUMBER = b'\x5E'  # Очистные
+DEVICE_NUMBER = b'\xBD'  # ТП-2
 TEST_PORT = DEVICE_NUMBER + b'\x00'  # запрос на тестирование порта, в ответе должно прийти то же значение
 INIT_PORT = DEVICE_NUMBER + b'\x01\x01\x01\x01\x01\x01\x01\x01'
 DEVICE_NUMBER_REQUEST = b'\x08\x00'
@@ -123,12 +124,18 @@ def get_power_month_hex():
     return power_month
 
 
-def get_active_power_month(power_answer, ratio):
-
+def get_active_power_from_hex(power_answer, ratio):
     active_power_hex = str(hex(power_answer[2])[2:]) + str(hex(power_answer[1])[2:]) + \
                        str(hex(power_answer[4])[2:]) + str(hex(power_answer[3])[2:])
     active_power = int(active_power_hex, 16) / 1000 * ratio
     return active_power
+
+
+def get_reactive_power_from_hex(power_answer, ratio):
+    reactive_power_hex = str(hex(power_answer[10])[2:]) + str(hex(power_answer[9])[2:]) + \
+                       str(hex(power_answer[12])[2:]) + str(hex(power_answer[11])[2:])
+    reactive_power = int(reactive_power_hex, 16) / 1000 * ratio
+    return reactive_power
 
 
 def get_power_month_begin():
@@ -144,8 +151,8 @@ def get_power_month_begin():
         ser.readall()
         ser.write(power_month_begin_request_with_crc)
         time.sleep(DELAY)
-        print(ser.readall())
-    return 0
+        power_month_begin_hex = ser.readall()
+    return power_month_begin_hex
 
 
 # Функция возвращает список значений активной мощности 42 счетчика
@@ -238,13 +245,12 @@ def delta_period(date_end, date_begin):
 check_database_connection()
 check_com_port()
 get_device_number()
-power_answer = get_power_month_hex()
-print(get_active_power_month(power_answer, RATIO3))
-power_answer = get_power_month_begin()
-print(get_active_power_month(power_answer, 1))
-
-get_power_month_begin()
-
+power_answer_month = get_power_month_hex()
+print(get_active_power_from_hex(power_answer_month, RATIO2))
+print(get_reactive_power_from_hex(power_answer_month, RATIO2))
+power_answer_month_begin = get_power_month_begin()
+print(get_active_power_from_hex(power_answer_month_begin, 1))
+print(get_reactive_power_from_hex(power_answer_month_begin, 1))
 answer42 = get_power_values_from_database42(date_time_begin_obj, date_time_end_obj)
 answer55 = get_power_values_from_database55(date_time_begin_obj, date_time_end_obj)
 answer56 = get_power_values_from_database56(date_time_begin_obj, date_time_end_obj)
@@ -437,8 +443,8 @@ for rows in range(0, 31, 1):
                      + '*' + str(RATIO2) + ' + Worksheet!H' + str(rows + 75) + '*' + str(RATIO3), format_right)
     worksheet2.write(rows + 6, 8, '=Worksheet!I' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!I' + str(rows + 41)
                      + '*' + str(RATIO2) + ' + Worksheet!I' + str(rows + 75) + '*' + str(RATIO3), format_right)
-    worksheet2.write(rows + 6, 9, '=Worksheet!J' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!I' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!I' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 9, '=Worksheet!J' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!J' + str(rows + 41)
+                     + '*' + str(RATIO2) + ' + Worksheet!J' + str(rows + 75) + '*' + str(RATIO3), format_right)
     worksheet2.write(rows + 6, 10,
                      '=Worksheet!K' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!K' + str(rows + 41)
                      + '*' + str(RATIO2) + ' + Worksheet!K' + str(rows + 75) + '*' + str(RATIO3), format_right)
@@ -452,7 +458,7 @@ for rows in range(0, 31, 1):
                      '=Worksheet!N' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!N' + str(rows + 41)
                      + '*' + str(RATIO2) + ' + Worksheet!N' + str(rows + 75) + '*' + str(RATIO3), format_right)
     worksheet2.write(rows + 6, 14,
-                     '=Worksheet!O' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!P' + str(rows + 41)
+                     '=Worksheet!O' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!O' + str(rows + 41)
                      + '*' + str(RATIO2) + ' + Worksheet!O' + str(rows + 75) + '*' + str(RATIO3), format_right)
     worksheet2.write(rows + 6, 15,
                      '=Worksheet!P' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!P' + str(rows + 41)
