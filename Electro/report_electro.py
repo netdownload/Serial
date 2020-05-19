@@ -1,4 +1,5 @@
 # TODO Если понадобится конвертация в xls https://python-forum.io/Thread-how-to-convert-xlsx-to-xls
+# TODO Добавить проверки по показаниям счетчиков
 # pip install XlsxWriter
 import xlsxwriter
 # Библиотека для работы с базой данных MySQL
@@ -12,42 +13,75 @@ import serial
 import sys
 
 COMPANY = 'ОАО "Аньковское"'
-ENGINEER = 'Главный энергетик_______________'
+ENGINEER = 'Главный энергетик_________________'
+ENGINEER2 = 'Исполнитель_________________'
 NAME = 'Кабанов С.В.'
+PHONE_NUMBER = '(49353) 33102'
 CONTRACT_NUMBER = '29'
 # TODO Месяц и год надо брать из запроса
 MONTH = 'Апрель'
 YEAR = 2020
 # ------------------------
-# TODO Номера приборов определять по запросу из счетчика
-DEVICE_NUMBER1 = 25506893
-DEVICE_NUMBER2 = 1753886
-DEVICE_NUMBER3 = 4479066
-DEVICE_NAME1_1 = '"Аньково" ВЛ-102 ЗТП-400\nТ-1 активный'
-DEVICE_NAME1_2 = '"Аньково" ВЛ-102 ЗТП-400\nТ-1 реактивный'
+DEVICE_NAME55_1 = '"Аньково" ВЛ-102 ЗТП-400\nТ-1 активный'
+DEVICE_NAME55_2 = '"Аньково" ВЛ-102 ЗТП-400\nТ-1 реактивный'
+DEVICE_NAME56_1 = '"Аньково" ВЛ-102 ЗТП-400\nТ-2 активный'
+DEVICE_NAME56_2 = '"Аньково" ВЛ-102 ЗТП-400\nТ-2 реактивный'
+DEVICE_NAME42_1 = '"Аньково" ВЛ-102 КТП-400\nОчистные сооружения'
 # --------------------------
 # TODO Коэффициент трансформации определять по запросу из счетчика
-RATIO1 = 120
-RATIO2 = 120
-RATIO3 = 20
+RATIO55 = 120
+RATIO56 = 120
+RATIO42 = 20
 # --------------------------
-DELAY = 0.2
-COM = 'COM2'
+DELAY = 1
+COM42 = 'COM6'
+COM55 = 'COM8'
+COM56 = 'COM7'
 COM_SPEED = 9600
-# DEVICE_NUMBER = b'\x5E'  # Очистные
-DEVICE_NUMBER = b'\xBD'  # ТП-2
-TEST_PORT = DEVICE_NUMBER + b'\x00'  # запрос на тестирование порта, в ответе должно прийти то же значение
-INIT_PORT = DEVICE_NUMBER + b'\x01\x01\x01\x01\x01\x01\x01\x01'
+DEVICE_ADDRESS42 = b'\x5E'  # Очистные
+DEVICE_ADDRESS55 = b'\x5D'  # ТП-1
+DEVICE_ADDRESS56 = b'\xBD'  # ТП-2
+TEST_PORT = b'\x00'  # запрос на тестирование порта, в ответе должно прийти то же значение
+INIT_PORT = b'\x01\x01\x01\x01\x01\x01\x01\x01'
 DEVICE_NUMBER_REQUEST = b'\x08\x00'
+# --------------------------
+ACTIVE_LOSS = 3777
+REACTIVE_LOSS = 20464
+# --------------------------
+POWER_MONTH_JANUARY = b'\x05\x31\x00'
+POWER_MONTH_FEBRUARY = b'\x05\x32\x00'
+POWER_MONTH_MARCH = b'\x05\x33\x00'
+POWER_MONTH_APRIL = b'\x05\x34\x00'
+POWER_MONTH_MAY = b'\x05\x35\x00'
+POWER_MONTH_JUNE = b'\x05\x36\x00'
+POWER_MONTH_JULY = b'\x05\x37\x00'
+POWER_MONTH_AUGUST = b'\x05\x38\x00'
+POWER_MONTH_SEPTEMBER = b'\x05\x39\x00'
+POWER_MONTH_OCTOBER = b'\x05\x3A\x00'
+POWER_MONTH_NOVEMBER = b'\x05\x3B\x00'
+POWER_MONTH_DECEMBER = b'\x05\x3C\x00'
+# --------------------------
+POWER_MONTH_JANUARY_BEGIN = b'\x05\xB1\x00'
+POWER_MONTH_FEBRUARY_BEGIN = b'\x05\xB2\x00'
+POWER_MONTH_MARCH_BEGIN = b'\x05\xB3\x00'
+POWER_MONTH_APRIL_BEGIN = b'\x05\xB4\x00'
+POWER_MONTH_MAY_BEGIN = b'\x05\xB5\x00'
+POWER_MONTH_JUNE_BEGIN = b'\x05\xB6\x00'
+POWER_MONTH_JULY_BEGIN = b'\x05\xB7\x00'
+POWER_MONTH_AUGUST_BEGIN = b'\x05\xB8\x00'
+POWER_MONTH_SEPTEMBER_BEGIN = b'\x05\xB9\x00'
+POWER_MONTH_OCTOBER_BEGIN = b'\x05\xBA\x00'
+POWER_MONTH_NOVEMBER_BEGIN = b'\x05\xBB\x00'
+POWER_MONTH_DECEMBER_BEGIN = b'\x05\xBC\x00'
 # --------------------------
 DATABASE_HOST = '10.1.1.99'
 DATABASE_USER = 'user'
 DATABASE_PASSWORD = 'qwerty123'
 DATABASE = 'resources'
 # --------------------------
-date_time_begin = '2020-04-01 00:30:00'
+date_time_begin = '2020-03-01 00:30:00'
 date_time_begin_obj = datetime.datetime.strptime(date_time_begin, '%Y-%m-%d %H:%M:%S')
-date_time_end = '2020-05-01 00:00:00'
+date_time_end = '2020-04-01 00:00:00'
 date_time_end_obj = datetime.datetime.strptime(date_time_end, '%Y-%m-%d %H:%M:%S')
 
 
@@ -65,9 +99,9 @@ def check_database_connection():
 
 
 # Функция для проверки доступности COM порта
-def check_com_port():
+def check_com_port(com_port):
     try:
-        serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+        serial.Serial(com_port, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
                       bytesize=serial.EIGHTBITS, timeout=1)
         print('Порт доступен')
         return 0
@@ -76,13 +110,13 @@ def check_com_port():
         sys.exit("Порт недоступен")
 
 
-def get_device_number():
-    crc16 = libscrc.modbus(INIT_PORT)
-    init_port_with_crc = INIT_PORT + crc16.to_bytes(2, byteorder='little')
-    device_number_request = DEVICE_NUMBER + DEVICE_NUMBER_REQUEST
+def get_device_number(com_port, device_address):
+    crc16 = libscrc.modbus(device_address + INIT_PORT)
+    init_port_with_crc = device_address + INIT_PORT + crc16.to_bytes(2, byteorder='little')
+    device_number_request = device_address + DEVICE_NUMBER_REQUEST
     crc16 = libscrc.modbus(device_number_request)
     device_number_request_with_crc = device_number_request + crc16.to_bytes(2, byteorder='little')
-    with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+    with serial.Serial(com_port, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
                        bytesize=serial.EIGHTBITS, timeout=1) as ser:
         ser.write(init_port_with_crc)
         time.sleep(DELAY)
@@ -103,48 +137,70 @@ def get_device_number():
         device_number4 = str(device_number_hex[4])
         if len(device_number4) < 2:
             device_number4 = '0' + device_number4
-        device_number = device_number1 + device_number2 + device_number3 + device_number4
-        return device_number
+        device_number_text = device_number1 + device_number2 + device_number3 + device_number4
+        return device_number_text
 
 
-def get_power_month_hex():
-    crc16 = libscrc.modbus(INIT_PORT)
-    init_port_with_crc = INIT_PORT + crc16.to_bytes(2, byteorder='little')
-    power_month_request = DEVICE_NUMBER + b'\x05\x34\x00'
+def get_power_month_hex(com_port, device_address, power_month):
+    crc16 = libscrc.modbus(device_address + INIT_PORT)
+    init_port_with_crc = device_address + INIT_PORT + crc16.to_bytes(2, byteorder='little')
+    power_month_request = device_address + power_month
     crc16 = libscrc.modbus(power_month_request)
     power_month_request_with_crc = power_month_request + crc16.to_bytes(2, byteorder='little')
-    with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+    with serial.Serial(com_port, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
                        bytesize=serial.EIGHTBITS, timeout=1) as ser:
         ser.write(init_port_with_crc)
         time.sleep(DELAY)
         ser.readall()
         ser.write(power_month_request_with_crc)
         time.sleep(DELAY)
-        power_month = ser.readall()
-    return power_month
+        power_month_hex = ser.readall()
+    return power_month_hex
 
 
 def get_active_power_from_hex(power_answer, ratio):
-    active_power_hex = str(hex(power_answer[2])[2:]) + str(hex(power_answer[1])[2:]) + \
-                       str(hex(power_answer[4])[2:]) + str(hex(power_answer[3])[2:])
+    active_power_hex1 = str(hex(power_answer[2])[2:])
+    active_power_hex2 = str(hex(power_answer[1])[2:])
+    active_power_hex3 = str(hex(power_answer[4])[2:])
+    active_power_hex4 = str(hex(power_answer[3])[2:])
+    if len(active_power_hex1) < 2:
+        active_power_hex1 = '0' + active_power_hex1
+    if len(active_power_hex2) < 2:
+        active_power_hex2 = '0' + active_power_hex2
+    if len(active_power_hex3) < 2:
+        active_power_hex3 = '0' + active_power_hex3
+    if len(active_power_hex4) < 2:
+        active_power_hex4 = '0' + active_power_hex4
+    active_power_hex = active_power_hex1 + active_power_hex2 + active_power_hex3 + active_power_hex4
     active_power = int(active_power_hex, 16) / 1000 * ratio
     return active_power
 
 
 def get_reactive_power_from_hex(power_answer, ratio):
-    reactive_power_hex = str(hex(power_answer[10])[2:]) + str(hex(power_answer[9])[2:]) + \
-                       str(hex(power_answer[12])[2:]) + str(hex(power_answer[11])[2:])
+    reactive_power_hex1 = str(hex(power_answer[10])[2:])
+    reactive_power_hex2 = str(hex(power_answer[9])[2:])
+    reactive_power_hex3 = str(hex(power_answer[12])[2:])
+    reactive_power_hex4 = str(hex(power_answer[11])[2:])
+    if len(reactive_power_hex1) < 2:
+        reactive_power_hex1 = '0' + reactive_power_hex1
+    if len(reactive_power_hex2) < 2:
+        reactive_power_hex2 = '0' + reactive_power_hex2
+    if len(reactive_power_hex3) < 2:
+        reactive_power_hex3 = '0' + reactive_power_hex3
+    if len(reactive_power_hex4) < 2:
+        reactive_power_hex4 = '0' + reactive_power_hex4
+    reactive_power_hex = reactive_power_hex1 + reactive_power_hex2 + reactive_power_hex3 + reactive_power_hex4
     reactive_power = int(reactive_power_hex, 16) / 1000 * ratio
     return reactive_power
 
 
-def get_power_month_begin():
-    crc16 = libscrc.modbus(INIT_PORT)
-    init_port_with_crc = INIT_PORT + crc16.to_bytes(2, byteorder='little')
-    power_month_begin_request = DEVICE_NUMBER + b'\x05\xB4\x00'
+def get_power_month_begin(com_port, device_address, month_begin):
+    crc16 = libscrc.modbus(device_address + INIT_PORT)
+    init_port_with_crc = device_address + INIT_PORT + crc16.to_bytes(2, byteorder='little')
+    power_month_begin_request = device_address + month_begin
     crc16 = libscrc.modbus(power_month_begin_request)
     power_month_begin_request_with_crc = power_month_begin_request + crc16.to_bytes(2, byteorder='little')
-    with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+    with serial.Serial(com_port, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
                        bytesize=serial.EIGHTBITS, timeout=1) as ser:
         ser.write(init_port_with_crc)
         time.sleep(DELAY)
@@ -243,14 +299,46 @@ def delta_period(date_end, date_begin):
 
 
 check_database_connection()
-check_com_port()
-get_device_number()
-power_answer_month = get_power_month_hex()
-print(get_active_power_from_hex(power_answer_month, RATIO2))
-print(get_reactive_power_from_hex(power_answer_month, RATIO2))
-power_answer_month_begin = get_power_month_begin()
-print(get_active_power_from_hex(power_answer_month_begin, 1))
-print(get_reactive_power_from_hex(power_answer_month_begin, 1))
+
+check_com_port(COM55)
+device_number55 = get_device_number(COM55, DEVICE_ADDRESS55)
+power_answer_month = get_power_month_hex(COM55, DEVICE_ADDRESS55, POWER_MONTH_MARCH)
+active_power_month55 = get_active_power_from_hex(power_answer_month, RATIO55)
+reactive_power_month55 = get_reactive_power_from_hex(power_answer_month, RATIO55)
+power_answer_month_begin = get_power_month_begin(COM55, DEVICE_ADDRESS55, POWER_MONTH_MARCH_BEGIN)
+active_power_begin_month55 = get_active_power_from_hex(power_answer_month_begin, 1)
+reactive_power_begin_month55 = get_reactive_power_from_hex(power_answer_month_begin, 1)
+power_answer_month_end = get_power_month_begin(COM55, DEVICE_ADDRESS55, POWER_MONTH_APRIL_BEGIN)
+active_power_end_month55 = get_active_power_from_hex(power_answer_month_end, 1)
+reactive_power_end_month55 = get_reactive_power_from_hex(power_answer_month_end, 1)
+
+check_com_port(COM56)
+device_number56 = get_device_number(COM56, DEVICE_ADDRESS56)
+power_answer_month = get_power_month_hex(COM56, DEVICE_ADDRESS56, POWER_MONTH_MARCH)
+active_power_month56 = get_active_power_from_hex(power_answer_month, RATIO56)
+reactive_power_month56 = get_reactive_power_from_hex(power_answer_month, RATIO56)
+power_answer_month_begin = get_power_month_begin(COM56, DEVICE_ADDRESS56, POWER_MONTH_MARCH_BEGIN)
+active_power_begin_month56 = get_active_power_from_hex(power_answer_month_begin, 1)
+reactive_power_begin_month56 = get_reactive_power_from_hex(power_answer_month_begin, 1)
+power_answer_month_end = get_power_month_begin(COM56, DEVICE_ADDRESS56, POWER_MONTH_APRIL_BEGIN)
+active_power_end_month56 = get_active_power_from_hex(power_answer_month_end, 1)
+reactive_power_end_month56 = get_reactive_power_from_hex(power_answer_month_end, 1)
+
+check_com_port(COM42)
+device_number42 = get_device_number(COM42, DEVICE_ADDRESS42)
+power_answer_month = get_power_month_hex(COM42, DEVICE_ADDRESS42, POWER_MONTH_MARCH)
+active_power_month42 = get_active_power_from_hex(power_answer_month, RATIO42)
+reactive_power_month42 = get_reactive_power_from_hex(power_answer_month, RATIO42)
+power_answer_month_begin = get_power_month_begin(COM42, DEVICE_ADDRESS42, POWER_MONTH_MARCH_BEGIN)
+active_power_begin_month42 = get_active_power_from_hex(power_answer_month_begin, 1)
+reactive_power_begin_month42 = get_reactive_power_from_hex(power_answer_month_begin, 1)
+power_answer_month_end = get_power_month_begin(COM42, DEVICE_ADDRESS42, POWER_MONTH_APRIL_BEGIN)
+active_power_end_month42 = get_active_power_from_hex(power_answer_month_end, 1)
+reactive_power_end_month42 = get_reactive_power_from_hex(power_answer_month_end, 1)
+
+
+
+
 answer42 = get_power_values_from_database42(date_time_begin_obj, date_time_end_obj)
 answer55 = get_power_values_from_database55(date_time_begin_obj, date_time_end_obj)
 answer56 = get_power_values_from_database56(date_time_begin_obj, date_time_end_obj)
@@ -311,12 +399,28 @@ format_right_bold = workbook.add_format({
     'text_wrap': 1,
 })
 
-format_left = workbook.add_format({
+format_right_without_borders_bold = workbook.add_format({
+    'bold': 1,
+    'border': 0,
+    'align': 'right',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+})
+
+format_left_bold = workbook.add_format({
     'bold': 1,
     'border': 1,
     'align': 'left',
     'valign': 'vcenter',
     'text_wrap': 1,
+})
+
+format_left_without_borders_bold = workbook.add_format({
+    'bold': 1,
+    'border': 0,
+    'align': 'left',
+    'valign': 'vcenter',
+    'text_wrap': 0,
 })
 
 worksheet.set_column('A:A', 23.3)
@@ -326,9 +430,9 @@ worksheet.write('A1', COMPANY, bold)
 worksheet.write('A2', 'Отчет за потребленную электроэнергию и мощность, ' + MONTH + ' ' + str(YEAR) + ' г.', bold)
 
 worksheet.write('A3', 'Счетчик №')
-worksheet.write('B3', DEVICE_NUMBER1, bold)
+worksheet.write('B3', device_number55, format_right_without_borders_bold)
 worksheet.write('A4', 'Тр.тока (коэф)')
-worksheet.write('B4', RATIO1, bold)
+worksheet.write('B4', RATIO55, bold)
 
 worksheet.merge_range('B5:B6', 'Число расчетного месяца', format_center)
 worksheet.set_row(5, 30)
@@ -354,13 +458,13 @@ for rows in range(0, int((delta + 1) / 24 / 2), 1):
         print((answer55[cells_in] + answer55[cells_in + 1]) / 2)
         cells_in += 2
 
-worksheet.write('Y38', 'ИТОГО', format_left)
+worksheet.write('Y38', 'ИТОГО', format_left_bold)
 worksheet.write('Z38', '=SUM(C7:Z37)*120', format_right_bold)
 
 worksheet.write('A39', 'Счетчик №')
-worksheet.write('B39', DEVICE_NUMBER2, bold)
+worksheet.write('B39', device_number56, format_right_without_borders_bold)
 worksheet.write('A40', 'Тр.тока (коэф)')
-worksheet.write('B40', RATIO2, bold)
+worksheet.write('B40', RATIO56, bold)
 
 for rows in range(0, 31, 1):
     worksheet.write(rows + 40, 1, rows + 1, format_center)
@@ -375,13 +479,13 @@ for rows in range(0, int((delta + 1) / 24 / 2), 1):
         worksheet.write(rows + 40, (cells + 2) / 2 + 1, (answer56[cells_in] + answer56[cells_in + 1]) / 2, format_right)
         cells_in += 2
 
-worksheet.write('Y72', 'ИТОГО', format_left)
+worksheet.write('Y72', 'ИТОГО', format_left_bold)
 worksheet.write('Z72', '=SUM(C41:Z71)*120', format_right_bold)
 
 worksheet.write('A73', 'Счетчик №')
-worksheet.write('B73', DEVICE_NUMBER3, bold)
+worksheet.write('B73', device_number42, format_right_without_borders_bold)
 worksheet.write('A74', 'Тр.тока (коэф)')
-worksheet.write('B74', RATIO3, bold)
+worksheet.write('B74', RATIO42, bold)
 
 for rows in range(0, 31, 1):
     worksheet.write(rows + 74, 1, rows + 1, format_center)
@@ -397,7 +501,7 @@ for rows in range(0, int((delta + 1) / 24 / 2), 1):
         worksheet.write(rows + 74, (cells + 2) / 2 + 1, (answer42[cells_in] + answer42[cells_in + 1]) / 2, format_right)
         cells_in += 2
 
-worksheet.write('Y106', 'ИТОГО', format_left)
+worksheet.write('Y106', 'ИТОГО', format_left_bold)
 # TODO в MS Excel 2003 не происходит расчет формул на первом листе
 worksheet.write('Z106', "=SUM(C75:Z105)*20", format_right_bold)
 
@@ -429,72 +533,72 @@ for rows in range(0, 31, 1):
 for rows in range(0, 31, 1):
     # TODO Попробовать цикл по алфавиту
     #  https://stackoverflow.com/questions/17182656/how-do-i-iterate-through-the-alphabet
-    worksheet2.write(rows + 6, 2, '=Worksheet!C' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!C' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!C' + str(rows + 75) + '*' + str(RATIO3), format_right)
-    worksheet2.write(rows + 6, 3, '=Worksheet!D' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!D' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!D' + str(rows + 75) + '*' + str(RATIO3), format_right)
-    worksheet2.write(rows + 6, 4, '=Worksheet!E' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!E' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!E' + str(rows + 75) + '*' + str(RATIO3), format_right)
-    worksheet2.write(rows + 6, 5, '=Worksheet!F' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!F' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!F' + str(rows + 75) + '*' + str(RATIO3), format_right)
-    worksheet2.write(rows + 6, 6, '=Worksheet!G' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!G' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!G' + str(rows + 75) + '*' + str(RATIO3), format_right)
-    worksheet2.write(rows + 6, 7, '=Worksheet!H' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!H' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!H' + str(rows + 75) + '*' + str(RATIO3), format_right)
-    worksheet2.write(rows + 6, 8, '=Worksheet!I' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!I' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!I' + str(rows + 75) + '*' + str(RATIO3), format_right)
-    worksheet2.write(rows + 6, 9, '=Worksheet!J' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!J' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!J' + str(rows + 75) + '*' + str(RATIO3), format_right)
+    worksheet2.write(rows + 6, 2, '=Worksheet!C' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!C' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!C' + str(rows + 75) + '*' + str(RATIO42), format_right)
+    worksheet2.write(rows + 6, 3, '=Worksheet!D' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!D' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!D' + str(rows + 75) + '*' + str(RATIO42), format_right)
+    worksheet2.write(rows + 6, 4, '=Worksheet!E' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!E' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!E' + str(rows + 75) + '*' + str(RATIO42), format_right)
+    worksheet2.write(rows + 6, 5, '=Worksheet!F' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!F' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!F' + str(rows + 75) + '*' + str(RATIO42), format_right)
+    worksheet2.write(rows + 6, 6, '=Worksheet!G' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!G' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!G' + str(rows + 75) + '*' + str(RATIO42), format_right)
+    worksheet2.write(rows + 6, 7, '=Worksheet!H' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!H' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!H' + str(rows + 75) + '*' + str(RATIO42), format_right)
+    worksheet2.write(rows + 6, 8, '=Worksheet!I' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!I' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!I' + str(rows + 75) + '*' + str(RATIO42), format_right)
+    worksheet2.write(rows + 6, 9, '=Worksheet!J' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!J' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!J' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 10,
-                     '=Worksheet!K' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!K' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!K' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!K' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!K' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!K' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 11,
-                     '=Worksheet!L' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!L' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!L' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!L' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!L' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!L' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 12,
-                     '=Worksheet!M' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!M' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!M' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!M' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!M' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!M' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 13,
-                     '=Worksheet!N' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!N' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!N' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!N' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!N' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!N' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 14,
-                     '=Worksheet!O' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!O' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!O' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!O' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!O' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!O' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 15,
-                     '=Worksheet!P' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!P' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!P' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!P' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!P' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!P' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 16,
-                     '=Worksheet!Q' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!Q' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!Q' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!Q' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!Q' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!Q' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 17,
-                     '=Worksheet!R' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!R' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!R' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!R' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!R' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!R' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 18,
-                     '=Worksheet!S' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!S' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!S' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!S' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!S' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!S' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 19,
-                     '=Worksheet!T' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!T' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!T' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!T' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!T' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!T' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 20,
-                     '=Worksheet!U' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!U' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!U' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!U' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!U' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!U' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 21,
-                     '=Worksheet!V' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!V' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!V' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!V' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!V' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!V' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 22,
-                     '=Worksheet!W' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!W' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!W' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!W' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!W' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!W' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 23,
-                     '=Worksheet!X' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!X' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!X' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!X' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!X' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!X' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 24,
-                     '=Worksheet!Y' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!Y' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!Y' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!Y' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!Y' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!Y' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 25,
-                     '=Worksheet!Z' + str(rows + 7) + '*' + str(RATIO1) + ' + Worksheet!Z' + str(rows + 41)
-                     + '*' + str(RATIO2) + ' + Worksheet!Z' + str(rows + 75) + '*' + str(RATIO3), format_right)
+                     '=Worksheet!Z' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!Z' + str(rows + 41)
+                     + '*' + str(RATIO56) + ' + Worksheet!Z' + str(rows + 75) + '*' + str(RATIO42), format_right)
 
-worksheet2.write('Y38', 'Сумма', format_left)
+worksheet2.write('Y38', 'Сумма', format_left_bold)
 worksheet2.write('Z38', '=SUM(C7:Z37)', format_right_bold)
 
 worksheet2.write('Q41', 'М.П.')
@@ -527,8 +631,78 @@ worksheet3.merge_range('G3:G4', 'Расход э/энергии (кВтч)', for
 for cells in range(0, 7):
     worksheet3.write(4, cells, str(cells + 1), format_center_bold)
 worksheet3.write('A6', '1.', format_center_bold)
-worksheet3.merge_range('B6:G6', 'Потребление электроэнергии Потребителем', format_left)
+worksheet3.merge_range('B6:G6', 'Потребление электроэнергии Потребителем', format_left_bold)
 worksheet3.write('A7', '1.1', format_center_bold)
-worksheet3.write('B7', DEVICE_NAME1_1, format_center_bold)
-worksheet3.write('C7', DEVICE_NUMBER1, format_center_bold)
+worksheet3.write('B7', DEVICE_NAME55_1, format_center_bold)
+worksheet3.write('C7', device_number55, format_center_bold)
+worksheet3.write('D7', active_power_end_month55, format_center_bold)
+worksheet3.write('E7', active_power_begin_month55, format_center_bold)
+worksheet3.write('F7', RATIO55, format_center_bold)
+worksheet3.write('G7', active_power_month55, format_center_bold)
+worksheet3.write('A8', '1.2', format_center_bold)
+worksheet3.write('B8', DEVICE_NAME55_2, format_center_bold)
+worksheet3.write('C8', device_number55, format_center_bold)
+worksheet3.write('D8', reactive_power_end_month55, format_center_bold)
+worksheet3.write('E8', reactive_power_begin_month55, format_center_bold)
+worksheet3.write('F8', RATIO55, format_center_bold)
+worksheet3.write('G8', reactive_power_month55, format_center_bold)
+worksheet3.write('A9', '1.3', format_center_bold)
+worksheet3.write('B9', DEVICE_NAME56_1, format_center_bold)
+worksheet3.write('C9', device_number56, format_center_bold)
+worksheet3.write('D9', active_power_end_month56, format_center_bold)
+worksheet3.write('E9', active_power_begin_month56, format_center_bold)
+worksheet3.write('F9', RATIO56, format_center_bold)
+worksheet3.write('G9', active_power_month56, format_center_bold)
+worksheet3.write('A10', '1.4', format_center_bold)
+worksheet3.write('B10', DEVICE_NAME56_2, format_center_bold)
+worksheet3.write('C10', device_number56, format_center_bold)
+worksheet3.write('D10', reactive_power_end_month56, format_center_bold)
+worksheet3.write('E10', reactive_power_begin_month56, format_center_bold)
+worksheet3.write('F10', RATIO56, format_center_bold)
+worksheet3.write('G10', reactive_power_month56, format_center_bold)
+worksheet3.write('A11', '1.5', format_center_bold)
+worksheet3.write('B11', DEVICE_NAME42_1, format_center_bold)
+worksheet3.write('C11', device_number42, format_center_bold)
+worksheet3.write('D11', active_power_end_month42, format_center_bold)
+worksheet3.write('E11', active_power_begin_month42, format_center_bold)
+worksheet3.write('F11', RATIO42, format_center_bold)
+worksheet3.write('G11', active_power_month42, format_center_bold)
+worksheet3.write('A12', '2.', format_center_bold)
+worksheet3.merge_range('B12:F12', 'Потери э/э оплачиваемые активные', format_left_bold)
+worksheet3.write('G12', ACTIVE_LOSS, format_center_bold)
+worksheet3.write('A13', '2.1', format_center_bold)
+for cells in range(1, 7):
+    worksheet3.write(12, cells, None, format_center_bold)
+worksheet3.write('A14', '3.', format_center_bold)
+worksheet3.merge_range('B14:F14', 'Потери э/э оплачиваемые реактивные', format_left_bold)
+worksheet3.write('G14', REACTIVE_LOSS, format_center_bold)
+worksheet3.write('A15', '3.1', format_center_bold)
+worksheet3.write('B15', 'Реактивное потребление\nпо "Правилу"', format_center_bold)
+for cells in range(2, 7):
+    worksheet3.write(14, cells, None, format_center_bold)
+worksheet3.write('A16', '3.2', format_center_bold)
+for cells in range(1, 7):
+    worksheet3.write(15, cells, None, format_center_bold)
+worksheet3.write('A17', '4.', format_center_bold)
+worksheet3.merge_range('B17:G17', 'Замена прибора учета э/э', format_left_bold)
+worksheet3.write('A18', '4.1', format_center_bold)
+for cells in range(1, 7):
+    worksheet3.write(17, cells, None, format_center_bold)
+worksheet3.write('A19', '4.2', format_center_bold)
+worksheet3.merge_range('B19:F19', 'ИТОГО ОБЩИЙ РАСХОД (С ПОТЕРЯМИ), АКТИВНЫЙ', format_left_bold)
+worksheet3.write('G19', active_power_month55+active_power_month56+active_power_month42+ACTIVE_LOSS, format_center_bold)
+worksheet3.write('B20', None, format_center_bold)
+worksheet3.merge_range('B20:F20', 'ИТОГО ОБЩИЙ РАСХОД (С ПОТЕРЯМИ), РЕАКТИВНЫЙ', format_left_bold)
+worksheet3.write('G20', reactive_power_month55+reactive_power_month56+REACTIVE_LOSS, format_center_bold)
+for cells in range(0, 7):
+    worksheet3.write(20, cells, None, format_center_bold)
+worksheet3.write('F23', 'М. П.', format_left_without_borders_bold)
+worksheet3.write('B25', ENGINEER2 + NAME, format_left_without_borders_bold)
+worksheet3.write('B27', 'телефон ' + PHONE_NUMBER, format_left_without_borders_bold)
+
+# ---------------NEXT SHEET 'Svedeniya'-------------
+
+worksheet4 = workbook.add_worksheet()
+worksheet4.name = 'Svedeniya'
+
 workbook.close()
