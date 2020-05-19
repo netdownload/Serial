@@ -18,6 +18,8 @@ ENGINEER2 = 'Исполнитель_________________'
 NAME = 'Кабанов С.В.'
 PHONE_NUMBER = '(49353) 33102'
 CONTRACT_NUMBER = '29'
+CONTRACT_NUMBER2 = 'ЭСК-29'
+CONTRACT_DATE = '01.07.2014'
 # TODO Месяц и год надо брать из запроса
 MONTH = 'Апрель'
 YEAR = 2020
@@ -383,6 +385,14 @@ format_center_without_borders_bold = workbook.add_format({
     'text_wrap': 1,
 })
 
+format_center_with_borders = workbook.add_format({
+    'bold': 0,
+    'border': 1,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+})
+
 format_right = workbook.add_format({
     'bold': 0,
     'border': 1,
@@ -705,4 +715,39 @@ worksheet3.write('B27', 'телефон ' + PHONE_NUMBER, format_left_without_bo
 worksheet4 = workbook.add_worksheet()
 worksheet4.name = 'Svedeniya'
 
+worksheet4.set_column('A:A', 61.6)
+worksheet4.set_column('B:B', 28)
+worksheet4.set_column('C:C', 9)
+worksheet4.set_column('D:D', 22.7)
+worksheet4.set_column('E:E', 15.6)
+worksheet4.set_column('F:F', 16.6)
+worksheet4.set_column('G:G', 12.7)
+worksheet4.set_column('H:H', 12.7)
+worksheet4.set_column('I:I', 3)
+worksheet4.set_column('J:J', 6.6)
+worksheet4.set_column('K:K', 7.7)
+worksheet4.set_column('L:L', 18.4)
+
+worksheet4.set_row(2, 7.5)
+worksheet4.set_row(4, 5.25)
+worksheet4.set_row(5, 6)
+
+
+worksheet4.merge_range('A1:L1', 'СВЕДЕНИЯ', format_center_without_borders_bold)
+worksheet4.merge_range('A2:L2', 'о расходе электроэнергии за ' + MONTH + ' ' + str(YEAR) + ' г.',
+                       format_center_without_borders_bold)
+worksheet4.merge_range('A4:L4', COMPANY + ' № ' + CONTRACT_NUMBER2 + ' от ' + CONTRACT_DATE + ' г.',
+                       format_center_without_borders_bold)
+worksheet4.merge_range('A7:A8', 'Наименование объекта', format_center_with_borders)
+worksheet4.merge_range('B7:B8', '№ фидера', format_center_with_borders)
+worksheet4.merge_range('C7:C8', '№ КТП', format_center_with_borders)
+worksheet4.merge_range('D7:D8', 'Тип счетчика', format_center_with_borders)
+worksheet4.merge_range('E7:E8', '№ счетчика', format_center_with_borders)
+worksheet4.merge_range('F7:F8', 'Дата снятия показаний мсетчика', format_center_with_borders)
+worksheet4.merge_range('G7:H7', 'Показания счетчика', format_center_with_borders)
+worksheet4.write('G8', 'начальное', format_center_with_borders)
+worksheet4.write('H8', 'конечное', format_center_with_borders)
+worksheet4.merge_range('I7:J8', 'Разность показаний', format_center_with_borders)
+worksheet4.merge_range('K7:K8', 'Коэффи-\nциент счетчика', format_center_with_borders)
+worksheet4.merge_range('L7:L8', 'Расход электроэнергии\n(кВтч)', format_center_with_borders)
 workbook.close()
