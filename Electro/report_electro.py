@@ -433,6 +433,57 @@ format_left_without_borders_bold = workbook.add_format({
     'text_wrap': 0,
 })
 
+format_left_with_borders_bold_underline_times_12 = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'left',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 12,
+    'underline': 1,
+})
+
+format_left_with_borders_bold_times_14 = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'left',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 14,
+})
+
+format_center_without_borders_bold_times_16 = workbook.add_format({
+    'bold': 1,
+    'border': 0,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 16,
+})
+
+format_center_with_borders_times_12 = workbook.add_format({
+    'bold': 0,
+    'border': 1,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 12,
+})
+
+format_center_with_borders_times_8 = workbook.add_format({
+    'bold': 0,
+    'border': 1,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 8,
+})
+
 worksheet.set_column('A:A', 23.3)
 worksheet.set_column('B:Z', 11.3)
 
@@ -731,23 +782,34 @@ worksheet4.set_column('L:L', 18.4)
 worksheet4.set_row(2, 7.5)
 worksheet4.set_row(4, 5.25)
 worksheet4.set_row(5, 6)
+worksheet4.set_row(6, 27)
+worksheet4.set_row(7, 21)
+worksheet4.set_row(10, 13.5)
 
-
-worksheet4.merge_range('A1:L1', 'СВЕДЕНИЯ', format_center_without_borders_bold)
+worksheet4.merge_range('A1:L1', 'СВЕДЕНИЯ', format_center_without_borders_bold_times_16)
 worksheet4.merge_range('A2:L2', 'о расходе электроэнергии за ' + MONTH + ' ' + str(YEAR) + ' г.',
-                       format_center_without_borders_bold)
+                       format_center_without_borders_bold_times_16)
 worksheet4.merge_range('A4:L4', COMPANY + ' № ' + CONTRACT_NUMBER2 + ' от ' + CONTRACT_DATE + ' г.',
-                       format_center_without_borders_bold)
-worksheet4.merge_range('A7:A8', 'Наименование объекта', format_center_with_borders)
-worksheet4.merge_range('B7:B8', '№ фидера', format_center_with_borders)
-worksheet4.merge_range('C7:C8', '№ КТП', format_center_with_borders)
-worksheet4.merge_range('D7:D8', 'Тип счетчика', format_center_with_borders)
-worksheet4.merge_range('E7:E8', '№ счетчика', format_center_with_borders)
-worksheet4.merge_range('F7:F8', 'Дата снятия показаний мсетчика', format_center_with_borders)
-worksheet4.merge_range('G7:H7', 'Показания счетчика', format_center_with_borders)
-worksheet4.write('G8', 'начальное', format_center_with_borders)
-worksheet4.write('H8', 'конечное', format_center_with_borders)
-worksheet4.merge_range('I7:J8', 'Разность показаний', format_center_with_borders)
-worksheet4.merge_range('K7:K8', 'Коэффи-\nциент счетчика', format_center_with_borders)
-worksheet4.merge_range('L7:L8', 'Расход электроэнергии\n(кВтч)', format_center_with_borders)
+                       format_center_without_borders_bold_times_16)
+worksheet4.merge_range('A7:A8', 'Наименование объекта', format_center_with_borders_times_12)
+worksheet4.merge_range('B7:B8', '№ фидера', format_center_with_borders_times_12)
+worksheet4.merge_range('C7:C8', '№ КТП', format_center_with_borders_times_12)
+worksheet4.merge_range('D7:D8', 'Тип счетчика', format_center_with_borders_times_12)
+worksheet4.merge_range('E7:E8', '№ счетчика', format_center_with_borders_times_12)
+worksheet4.merge_range('F7:F8', 'Дата снятия показаний счетчика', format_center_with_borders_times_12)
+worksheet4.merge_range('G7:H7', 'Показания счетчика', format_center_with_borders_times_12)
+worksheet4.write('G8', 'начальное', format_center_with_borders_times_12)
+worksheet4.write('H8', 'конечное', format_center_with_borders_times_12)
+worksheet4.merge_range('I7:J8', 'Разность показаний', format_center_with_borders_times_12)
+worksheet4.merge_range('K7:K8', 'Коэффи-\nциент счетчика', format_center_with_borders_times_12)
+worksheet4.merge_range('L7:L8', 'Расход электроэнергии\n(кВтч)', format_center_with_borders_times_12)
+for cells in range(0, 7):
+    worksheet4.write(8, cells, cells + 1, format_center_with_borders_times_8)
+worksheet4.merge_range('I9:J9', '9', format_center_with_borders_times_8)
+worksheet4.write('K9', '10', format_center_with_borders_times_8)
+worksheet4.write('L9', '11', format_center_with_borders_times_8)
+worksheet4.merge_range('A10:L10', 'Потребление электроэнергии Потребителем', format_left_with_borders_bold_times_14)
+worksheet4.merge_range('A11:L11', None, format_center_with_borders_times_12)
+worksheet4.write('A12', 'Потребители с макс. мощностью  от 150кВт до 670кВт, СН-2',
+                 format_left_with_borders_bold_underline_times_12)
 workbook.close()
