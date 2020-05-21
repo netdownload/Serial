@@ -24,6 +24,9 @@ CONTRACT_DATE = '01.07.2014'
 MONTH = 'Апрель'
 YEAR = 2020
 # ------------------------
+DEVICE55 = 'Меркурий 230 ART-01'
+DEVICE56 = 'Меркурий 230 ART-01'
+DEVICE42 = 'Меркурий 230 ART-01'
 DEVICE_NAME55_1 = '"Аньково" ВЛ-102 ЗТП-400\nТ-1 активный'
 DEVICE_NAME55_2 = '"Аньково" ВЛ-102 ЗТП-400\nТ-1 реактивный'
 DEVICE_NAME56_1 = '"Аньково" ВЛ-102 ЗТП-400\nТ-2 активный'
@@ -49,6 +52,8 @@ DEVICE_NUMBER_REQUEST = b'\x08\x00'
 # --------------------------
 ACTIVE_LOSS = 3777
 REACTIVE_LOSS = 20464
+ACTIVE_LOSS2 = 3474
+ACTIVE_LOSS3 = 303
 # --------------------------
 POWER_MONTH_JANUARY = b'\x05\x31\x00'
 POWER_MONTH_FEBRUARY = b'\x05\x32\x00'
@@ -454,6 +459,16 @@ format_left_with_borders_bold_times_14 = workbook.add_format({
     'font_size': 14,
 })
 
+format_left_with_borders_bold_times_12 = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'left',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 12,
+})
+
 format_center_without_borders_bold_times_16 = workbook.add_format({
     'bold': 1,
     'border': 0,
@@ -464,6 +479,16 @@ format_center_without_borders_bold_times_16 = workbook.add_format({
     'font_size': 16,
 })
 
+format_center_without_borders_bold_times_14 = workbook.add_format({
+    'bold': 1,
+    'border': 0,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 14,
+})
+
 format_center_with_borders_times_12 = workbook.add_format({
     'bold': 0,
     'border': 1,
@@ -472,6 +497,17 @@ format_center_with_borders_times_12 = workbook.add_format({
     'text_wrap': 1,
     'font_name': 'Times New Roman',
     'font_size': 12,
+})
+
+format_center_with_borders_times_12_number = workbook.add_format({
+    'bold': 0,
+    'border': 1,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 12,
+    'num_format': 1,
 })
 
 format_center_with_borders_times_8 = workbook.add_format({
@@ -785,15 +821,17 @@ worksheet4.set_row(5, 6)
 worksheet4.set_row(6, 27)
 worksheet4.set_row(7, 21)
 worksheet4.set_row(10, 13.5)
+worksheet4.set_row(12, 30)
+worksheet4.set_row(13, 30)
 
 worksheet4.merge_range('A1:L1', 'СВЕДЕНИЯ', format_center_without_borders_bold_times_16)
 worksheet4.merge_range('A2:L2', 'о расходе электроэнергии за ' + MONTH + ' ' + str(YEAR) + ' г.',
-                       format_center_without_borders_bold_times_16)
+                       format_center_without_borders_bold_times_14)
 worksheet4.merge_range('A4:L4', COMPANY + ' № ' + CONTRACT_NUMBER2 + ' от ' + CONTRACT_DATE + ' г.',
-                       format_center_without_borders_bold_times_16)
+                       format_center_without_borders_bold_times_14)
 worksheet4.merge_range('A7:A8', 'Наименование объекта', format_center_with_borders_times_12)
-worksheet4.merge_range('B7:B8', '№ фидера', format_center_with_borders_times_12)
-worksheet4.merge_range('C7:C8', '№ КТП', format_center_with_borders_times_12)
+worksheet4.merge_range('B7:B8', '№\nфидера', format_center_with_borders_times_12)
+worksheet4.merge_range('C7:C8', '№\nКТП', format_center_with_borders_times_12)
 worksheet4.merge_range('D7:D8', 'Тип счетчика', format_center_with_borders_times_12)
 worksheet4.merge_range('E7:E8', '№ счетчика', format_center_with_borders_times_12)
 worksheet4.merge_range('F7:F8', 'Дата снятия показаний счетчика', format_center_with_borders_times_12)
@@ -812,4 +850,22 @@ worksheet4.merge_range('A10:L10', 'Потребление электроэнер
 worksheet4.merge_range('A11:L11', None, format_center_with_borders_times_12)
 worksheet4.write('A12', 'Потребители с макс. мощностью  от 150кВт до 670кВт, СН-2',
                  format_left_with_borders_bold_underline_times_12)
+for cells in range(1, 6):
+    worksheet4.write(11, cells, None, format_center_with_borders_times_12)
+worksheet4.merge_range('G12:K12', None, format_center_with_borders_times_12)
+worksheet4.write('L12', None, format_center_with_borders_times_12)
+worksheet4.merge_range('A13:A14', '1.1. ПС "Аньково", ВЛ-10кВ №102, 107', format_left_with_borders_bold_times_12)
+worksheet4.merge_range('B13:B14', 'РУ-0,4кВ ЗТП 2*400кВА', format_center_with_borders_times_12)
+worksheet4.write('C13', 'Т-1', format_center_with_borders_times_12)
+worksheet4.write('C14', 'Т-2', format_center_with_borders_times_12)
+worksheet4.write('D13', DEVICE55, format_center_with_borders_times_12)
+worksheet4.write('D14', DEVICE56, format_center_with_borders_times_12)
+worksheet4.write('E13', device_number55, format_center_with_borders_times_12)
+worksheet4.write('E14', device_number56, format_center_with_borders_times_12)
+worksheet4.write('F13', date_time_begin_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
+worksheet4.write('F14', date_time_begin_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
+worksheet4.merge_range('G13:K13', 'по профилю потребителя', format_center_with_borders_times_12)
+worksheet4.merge_range('G14:K14', 'по профилю потребителя', format_center_with_borders_times_12)
+worksheet4.write('L13', active_power_month55, format_center_with_borders_times_12_number)
+
 workbook.close()
