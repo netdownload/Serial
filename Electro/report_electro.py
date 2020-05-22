@@ -343,9 +343,6 @@ power_answer_month_end = get_power_month_begin(COM42, DEVICE_ADDRESS42, POWER_MO
 active_power_end_month42 = get_active_power_from_hex(power_answer_month_end, 1)
 reactive_power_end_month42 = get_reactive_power_from_hex(power_answer_month_end, 1)
 
-
-
-
 answer42 = get_power_values_from_database42(date_time_begin_obj, date_time_end_obj)
 answer55 = get_power_values_from_database55(date_time_begin_obj, date_time_end_obj)
 answer56 = get_power_values_from_database56(date_time_begin_obj, date_time_end_obj)
@@ -414,6 +411,18 @@ format_right_bold = workbook.add_format({
     'text_wrap': 1,
 })
 
+format_right_with_borders_bold_times_12_number3 = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'right',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 12,
+    'num_format': 3,
+    # 'num_format': x -> https://xlsxwriter.readthedocs.io/format.html#num-format-categories
+})
+
 format_right_without_borders_bold = workbook.add_format({
     'bold': 1,
     'border': 0,
@@ -449,7 +458,7 @@ format_left_with_borders_bold_underline_times_12 = workbook.add_format({
     'underline': 1,
 })
 
-format_left_with_borders_bold_times_14 = workbook.add_format({
+format_left_with_borders_bold_times_14_bg_color = workbook.add_format({
     'bold': 1,
     'border': 1,
     'align': 'left',
@@ -457,10 +466,21 @@ format_left_with_borders_bold_times_14 = workbook.add_format({
     'text_wrap': 1,
     'font_name': 'Times New Roman',
     'font_size': 14,
+    'bg_color': '#FFFF99',
 })
 
 format_left_with_borders_bold_times_12 = workbook.add_format({
     'bold': 1,
+    'border': 1,
+    'align': 'left',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 12,
+})
+
+format_left_with_borders_times_12 = workbook.add_format({
+    'bold': 0,
     'border': 1,
     'align': 'left',
     'valign': 'vcenter',
@@ -489,6 +509,18 @@ format_center_without_borders_bold_times_14 = workbook.add_format({
     'font_size': 14,
 })
 
+format_center_without_borders_bold_times_16_number4_bg_color = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 16,
+    'bg_color': '#FFFF99',
+    'num_format': 3,
+})
+
 format_center_with_borders_times_12 = workbook.add_format({
     'bold': 0,
     'border': 1,
@@ -507,7 +539,8 @@ format_center_with_borders_times_12_number = workbook.add_format({
     'text_wrap': 1,
     'font_name': 'Times New Roman',
     'font_size': 12,
-    'num_format': 1,
+    'num_format': 4,
+    # 'num_format': x -> https://xlsxwriter.readthedocs.io/format.html#num-format-categories
 })
 
 format_center_with_borders_times_8 = workbook.add_format({
@@ -630,21 +663,29 @@ for rows in range(0, 31, 1):
 for rows in range(0, 31, 1):
     # TODO Попробовать цикл по алфавиту
     #  https://stackoverflow.com/questions/17182656/how-do-i-iterate-through-the-alphabet
-    worksheet2.write(rows + 6, 2, '=Worksheet!C' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!C' + str(rows + 41)
+    worksheet2.write(rows + 6, 2,
+                     '=Worksheet!C' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!C' + str(rows + 41)
                      + '*' + str(RATIO56) + ' + Worksheet!C' + str(rows + 75) + '*' + str(RATIO42), format_right)
-    worksheet2.write(rows + 6, 3, '=Worksheet!D' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!D' + str(rows + 41)
+    worksheet2.write(rows + 6, 3,
+                     '=Worksheet!D' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!D' + str(rows + 41)
                      + '*' + str(RATIO56) + ' + Worksheet!D' + str(rows + 75) + '*' + str(RATIO42), format_right)
-    worksheet2.write(rows + 6, 4, '=Worksheet!E' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!E' + str(rows + 41)
+    worksheet2.write(rows + 6, 4,
+                     '=Worksheet!E' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!E' + str(rows + 41)
                      + '*' + str(RATIO56) + ' + Worksheet!E' + str(rows + 75) + '*' + str(RATIO42), format_right)
-    worksheet2.write(rows + 6, 5, '=Worksheet!F' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!F' + str(rows + 41)
+    worksheet2.write(rows + 6, 5,
+                     '=Worksheet!F' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!F' + str(rows + 41)
                      + '*' + str(RATIO56) + ' + Worksheet!F' + str(rows + 75) + '*' + str(RATIO42), format_right)
-    worksheet2.write(rows + 6, 6, '=Worksheet!G' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!G' + str(rows + 41)
+    worksheet2.write(rows + 6, 6,
+                     '=Worksheet!G' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!G' + str(rows + 41)
                      + '*' + str(RATIO56) + ' + Worksheet!G' + str(rows + 75) + '*' + str(RATIO42), format_right)
-    worksheet2.write(rows + 6, 7, '=Worksheet!H' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!H' + str(rows + 41)
+    worksheet2.write(rows + 6, 7,
+                     '=Worksheet!H' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!H' + str(rows + 41)
                      + '*' + str(RATIO56) + ' + Worksheet!H' + str(rows + 75) + '*' + str(RATIO42), format_right)
-    worksheet2.write(rows + 6, 8, '=Worksheet!I' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!I' + str(rows + 41)
+    worksheet2.write(rows + 6, 8,
+                     '=Worksheet!I' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!I' + str(rows + 41)
                      + '*' + str(RATIO56) + ' + Worksheet!I' + str(rows + 75) + '*' + str(RATIO42), format_right)
-    worksheet2.write(rows + 6, 9, '=Worksheet!J' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!J' + str(rows + 41)
+    worksheet2.write(rows + 6, 9,
+                     '=Worksheet!J' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!J' + str(rows + 41)
                      + '*' + str(RATIO56) + ' + Worksheet!J' + str(rows + 75) + '*' + str(RATIO42), format_right)
     worksheet2.write(rows + 6, 10,
                      '=Worksheet!K' + str(rows + 7) + '*' + str(RATIO55) + ' + Worksheet!K' + str(rows + 41)
@@ -787,10 +828,11 @@ for cells in range(1, 7):
     worksheet3.write(17, cells, None, format_center_bold)
 worksheet3.write('A19', '4.2', format_center_bold)
 worksheet3.merge_range('B19:F19', 'ИТОГО ОБЩИЙ РАСХОД (С ПОТЕРЯМИ), АКТИВНЫЙ', format_left_bold)
-worksheet3.write('G19', active_power_month55+active_power_month56+active_power_month42+ACTIVE_LOSS, format_center_bold)
+worksheet3.write('G19', active_power_month55 + active_power_month56 + active_power_month42 + ACTIVE_LOSS,
+                 format_center_bold)
 worksheet3.write('B20', None, format_center_bold)
 worksheet3.merge_range('B20:F20', 'ИТОГО ОБЩИЙ РАСХОД (С ПОТЕРЯМИ), РЕАКТИВНЫЙ', format_left_bold)
-worksheet3.write('G20', reactive_power_month55+reactive_power_month56+REACTIVE_LOSS, format_center_bold)
+worksheet3.write('G20', reactive_power_month55 + reactive_power_month56 + REACTIVE_LOSS, format_center_bold)
 for cells in range(0, 7):
     worksheet3.write(20, cells, None, format_center_bold)
 worksheet3.write('F23', 'М. П.', format_left_without_borders_bold)
@@ -823,6 +865,19 @@ worksheet4.set_row(7, 21)
 worksheet4.set_row(10, 13.5)
 worksheet4.set_row(12, 30)
 worksheet4.set_row(13, 30)
+worksheet4.set_row(14, 30)
+worksheet4.set_row(15, 30)
+worksheet4.set_row(16, 30)
+worksheet4.set_row(17, 19)
+worksheet4.set_row(18, 30)
+worksheet4.set_row(19, 30)
+worksheet4.set_row(20, 30)
+worksheet4.set_row(21, 30)
+worksheet4.set_row(22, 30)
+worksheet4.set_row(23, 0)
+worksheet4.set_row(24, 30)
+worksheet4.set_row(25, 30)
+worksheet4.set_row(26, 15)
 
 worksheet4.merge_range('A1:L1', 'СВЕДЕНИЯ', format_center_without_borders_bold_times_16)
 worksheet4.merge_range('A2:L2', 'о расходе электроэнергии за ' + MONTH + ' ' + str(YEAR) + ' г.',
@@ -846,7 +901,8 @@ for cells in range(0, 7):
 worksheet4.merge_range('I9:J9', '9', format_center_with_borders_times_8)
 worksheet4.write('K9', '10', format_center_with_borders_times_8)
 worksheet4.write('L9', '11', format_center_with_borders_times_8)
-worksheet4.merge_range('A10:L10', 'Потребление электроэнергии Потребителем', format_left_with_borders_bold_times_14)
+worksheet4.merge_range('A10:L10', 'Потребление электроэнергии Потребителем',
+                       format_left_with_borders_bold_times_14_bg_color)
 worksheet4.merge_range('A11:L11', None, format_center_with_borders_times_12)
 worksheet4.write('A12', 'Потребители с макс. мощностью  от 150кВт до 670кВт, СН-2',
                  format_left_with_borders_bold_underline_times_12)
@@ -867,5 +923,80 @@ worksheet4.write('F14', date_time_begin_obj.strftime('%d.%m.%Y'), format_center_
 worksheet4.merge_range('G13:K13', 'по профилю потребителя', format_center_with_borders_times_12)
 worksheet4.merge_range('G14:K14', 'по профилю потребителя', format_center_with_borders_times_12)
 worksheet4.write('L13', active_power_month55, format_center_with_borders_times_12_number)
-
+worksheet4.write('L14', active_power_month56, format_center_with_borders_times_12_number)
+worksheet4.write('A15', 'ИТОГО:', format_left_with_borders_bold_times_12)
+worksheet4.merge_range('B15:L15', (active_power_month55 + active_power_month56),
+                       format_right_with_borders_bold_times_12_number3)
+worksheet4.write('A16', 'Потери э/э оплачиваемые:', format_left_with_borders_bold_times_12)
+worksheet4.merge_range('B16:L16', ACTIVE_LOSS2, format_right_with_borders_bold_times_12_number3)
+worksheet4.write('A17', 'ВСЕГО: от 150кВт до 670кВт', format_left_with_borders_bold_times_12)
+worksheet4.merge_range('B17:L17', (active_power_month55 + active_power_month56 + ACTIVE_LOSS2),
+                       format_right_with_borders_bold_times_12_number3)
+worksheet4.merge_range('A18:L18', None, format_center_with_borders_times_12)
+worksheet4.merge_range('A19:A21', 'Потребители с макс. Мощностью менее 150кВт, СН-2',
+                       format_left_with_borders_bold_times_12)
+worksheet4.merge_range('B19:B21', None, format_center_with_borders_times_12)
+worksheet4.merge_range('C19:C21', None, format_center_with_borders_times_12)
+worksheet4.merge_range('D19:D21', None, format_center_with_borders_times_12)
+worksheet4.merge_range('E19:E21', None, format_center_with_borders_times_12)
+worksheet4.merge_range('F19:F21', None, format_center_with_borders_times_12)
+worksheet4.merge_range('G19:K21', None, format_center_with_borders_times_12)
+worksheet4.merge_range('L19:L21', None, format_center_with_borders_times_12)
+worksheet4.merge_range('A22:A23', '1.1. "Очистные сооружения"', format_left_with_borders_times_12)
+worksheet4.merge_range('B22:B23', 'РУ-0,4кВ КТП-100кВа', format_center_with_borders_times_12)
+worksheet4.merge_range('C22:C23', None, format_center_with_borders_times_12)
+worksheet4.write('D22', DEVICE42, format_center_with_borders_times_12)
+worksheet4.write('D23', None, format_center_with_borders_times_12)
+worksheet4.write('E22', device_number42, format_center_with_borders_times_12)
+worksheet4.write('E23', None, format_center_with_borders_times_12)
+worksheet4.write('F22', date_time_begin_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
+worksheet4.write('F23', None, format_center_with_borders_times_12)
+worksheet4.merge_range('G22:K22', 'по профилю потребителя', format_center_with_borders_times_12)
+worksheet4.merge_range('G23:K23', None, format_center_with_borders_times_12)
+worksheet4.write('L22', active_power_month42, format_center_with_borders_times_12)
+worksheet4.write('L23', None, format_center_with_borders_times_12)
+worksheet4.merge_range('A25:A27', 'Потери э/э оплачиваемые:', format_left_with_borders_times_12)
+worksheet4.merge_range('B25:L27', ACTIVE_LOSS3, format_right_with_borders_bold_times_12_number3)
+worksheet4.merge_range('A28:A30', 'ИТОГО: менее 150кВт', format_left_with_borders_bold_times_12)
+worksheet4.merge_range('B28:L30', (active_power_month42 + ACTIVE_LOSS3),
+                       format_right_with_borders_bold_times_12_number3)
+worksheet4.write('A31', None, format_center_with_borders_times_12)
+worksheet4.write('B31', None, format_center_with_borders_times_12)
+worksheet4.write('C31', None, format_center_with_borders_times_12)
+worksheet4.write('D31', None, format_center_with_borders_times_12)
+worksheet4.write('E31', None, format_center_with_borders_times_12)
+worksheet4.write('F31', None, format_center_with_borders_times_12)
+worksheet4.merge_range('G31:K31', None, format_center_with_borders_times_12)
+worksheet4.write('L31', None, format_center_with_borders_times_12)
+worksheet4.write('A32', None, format_center_with_borders_times_12)
+worksheet4.write('B32', None, format_center_with_borders_times_12)
+worksheet4.write('C32', None, format_center_with_borders_times_12)
+worksheet4.write('D32', None, format_center_with_borders_times_12)
+worksheet4.write('E32', None, format_center_with_borders_times_12)
+worksheet4.write('F32', None, format_center_with_borders_times_12)
+worksheet4.merge_range('G32:K32', None, format_center_with_borders_times_12)
+worksheet4.write('L32', None, format_center_with_borders_times_12)
+worksheet4.write('A33', None, format_center_with_borders_times_12)
+worksheet4.write('B33', None, format_center_with_borders_times_12)
+worksheet4.write('C33', None, format_center_with_borders_times_12)
+worksheet4.write('D33', None, format_center_with_borders_times_12)
+worksheet4.write('E33', None, format_center_with_borders_times_12)
+worksheet4.write('F33', None, format_center_with_borders_times_12)
+worksheet4.merge_range('G33:K33', None, format_center_with_borders_times_12)
+worksheet4.write('L33', None, format_center_with_borders_times_12)
+worksheet4.write('A34', None, format_center_with_borders_times_12)
+worksheet4.write('B34', None, format_center_with_borders_times_12)
+worksheet4.write('C34', None, format_center_with_borders_times_12)
+worksheet4.write('D34', None, format_center_with_borders_times_12)
+worksheet4.write('E34', None, format_center_with_borders_times_12)
+worksheet4.write('F34', None, format_center_with_borders_times_12)
+worksheet4.merge_range('G34:K34', None, format_center_with_borders_times_12)
+worksheet4.write('L34', None, format_center_with_borders_times_12)
+worksheet4.merge_range('A35:K35', 'ИТОГО по договору №ЭСК-29', format_left_with_borders_bold_times_14_bg_color)
+worksheet4.write('L35', (active_power_month55 + active_power_month56 + active_power_month42 + ACTIVE_LOSS),
+                 format_center_without_borders_bold_times_16_number4_bg_color)
+worksheet4.merge_range('A37:L37', 'Генеральный директор____________________________________________________',
+                       format_center_without_borders)
+worksheet4.merge_range('B40:D40', 'Исполнитель:______________________________', format_center_without_borders)
+worksheet4.merge_range('I40:L40', '______________________________ /дата/', format_right)
 workbook.close()
