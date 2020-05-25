@@ -86,9 +86,9 @@ DATABASE_USER = 'user'
 DATABASE_PASSWORD = 'qwerty123'
 DATABASE = 'resources'
 # --------------------------
-date_time_begin = '2020-03-01 00:30:00'
+date_time_begin = '2020-04-01 00:30:00'
 date_time_begin_obj = datetime.datetime.strptime(date_time_begin, '%Y-%m-%d %H:%M:%S')
-date_time_end = '2020-04-01 00:00:00'
+date_time_end = '2020-05-01 00:00:00'
 date_time_end_obj = datetime.datetime.strptime(date_time_end, '%Y-%m-%d %H:%M:%S')
 
 
@@ -233,6 +233,13 @@ def get_power_values_from_database42(date_begin, date_end):
                 cursor.execute(sql, date_begin)
                 result = cursor.fetchone()
                 power_active42 = result
+                if power_active42 is None:
+                    date_begin_tmp = date_begin - datetime.timedelta(minutes=30)
+                    sql = 'SELECT electro42_active FROM electro42 WHERE electro42_datetime>%s AND ' \
+                          'electro42_datetime<%s LIMIT 0, 1 '
+                    cursor.execute(sql, (date_begin_tmp, date_begin))
+                    result = cursor.fetchone()
+                    power_active42 = result
                 try:
                     answer_from_database42.append(power_active42[0])
                 except TypeError:
@@ -258,6 +265,13 @@ def get_power_values_from_database55(date_begin, date_end):
                 cursor.execute(sql, date_begin)
                 result = cursor.fetchone()
                 power_active55 = result
+                if power_active55 is None:
+                    date_begin_tmp = date_begin - datetime.timedelta(minutes=30)
+                    sql = 'SELECT electro55_active FROM electro55 WHERE electro55_datetime>%s AND ' \
+                          'electro55_datetime<%s LIMIT 0, 1 '
+                    cursor.execute(sql, (date_begin_tmp, date_begin))
+                    result = cursor.fetchone()
+                    power_active55 = result
                 try:
                     answer_from_database55.append(power_active55[0])
                 except TypeError:
@@ -281,10 +295,17 @@ def get_power_values_from_database56(date_begin, date_end):
             for values in range(delta_time + 1):
                 sql = 'SELECT electro56_active FROM electro56 WHERE electro56_datetime=%s LIMIT 0, 1'
                 cursor.execute(sql, date_begin)
-                # TODO Дабавить считывание данных из базы при неполном срезе, данные будут между датами
                 result = cursor.fetchone()
-
                 power_active56 = result
+                # Блок считывания данных из базы при неполном срезе, данные будут между датами
+                if power_active56 is None:
+                    date_begin_tmp = date_begin - datetime.timedelta(minutes=30)
+                    sql = 'SELECT electro56_active FROM electro56 WHERE electro56_datetime>%s AND ' \
+                          'electro56_datetime<%s LIMIT 0, 1 '
+                    cursor.execute(sql, (date_begin_tmp, date_begin))
+                    result = cursor.fetchone()
+                    power_active56 = result
+                # ----------------------------------------------
                 try:
                     answer_from_database56.append(power_active56[0])
                 except TypeError:
@@ -309,37 +330,37 @@ check_database_connection()
 
 check_com_port(COM55)
 device_number55 = get_device_number(COM55, DEVICE_ADDRESS55)
-power_answer_month = get_power_month_hex(COM55, DEVICE_ADDRESS55, POWER_MONTH_MARCH)
+power_answer_month = get_power_month_hex(COM55, DEVICE_ADDRESS55, POWER_MONTH_APRIL)
 active_power_month55 = get_active_power_from_hex(power_answer_month, RATIO55)
 reactive_power_month55 = get_reactive_power_from_hex(power_answer_month, RATIO55)
-power_answer_month_begin = get_power_month_begin(COM55, DEVICE_ADDRESS55, POWER_MONTH_MARCH_BEGIN)
+power_answer_month_begin = get_power_month_begin(COM55, DEVICE_ADDRESS55, POWER_MONTH_APRIL_BEGIN)
 active_power_begin_month55 = get_active_power_from_hex(power_answer_month_begin, 1)
 reactive_power_begin_month55 = get_reactive_power_from_hex(power_answer_month_begin, 1)
-power_answer_month_end = get_power_month_begin(COM55, DEVICE_ADDRESS55, POWER_MONTH_APRIL_BEGIN)
+power_answer_month_end = get_power_month_begin(COM55, DEVICE_ADDRESS55, POWER_MONTH_MAY_BEGIN)
 active_power_end_month55 = get_active_power_from_hex(power_answer_month_end, 1)
 reactive_power_end_month55 = get_reactive_power_from_hex(power_answer_month_end, 1)
 
 check_com_port(COM56)
 device_number56 = get_device_number(COM56, DEVICE_ADDRESS56)
-power_answer_month = get_power_month_hex(COM56, DEVICE_ADDRESS56, POWER_MONTH_MARCH)
+power_answer_month = get_power_month_hex(COM56, DEVICE_ADDRESS56, POWER_MONTH_APRIL)
 active_power_month56 = get_active_power_from_hex(power_answer_month, RATIO56)
 reactive_power_month56 = get_reactive_power_from_hex(power_answer_month, RATIO56)
-power_answer_month_begin = get_power_month_begin(COM56, DEVICE_ADDRESS56, POWER_MONTH_MARCH_BEGIN)
+power_answer_month_begin = get_power_month_begin(COM56, DEVICE_ADDRESS56, POWER_MONTH_APRIL_BEGIN)
 active_power_begin_month56 = get_active_power_from_hex(power_answer_month_begin, 1)
 reactive_power_begin_month56 = get_reactive_power_from_hex(power_answer_month_begin, 1)
-power_answer_month_end = get_power_month_begin(COM56, DEVICE_ADDRESS56, POWER_MONTH_APRIL_BEGIN)
+power_answer_month_end = get_power_month_begin(COM56, DEVICE_ADDRESS56, POWER_MONTH_MAY_BEGIN)
 active_power_end_month56 = get_active_power_from_hex(power_answer_month_end, 1)
 reactive_power_end_month56 = get_reactive_power_from_hex(power_answer_month_end, 1)
 
 check_com_port(COM42)
 device_number42 = get_device_number(COM42, DEVICE_ADDRESS42)
-power_answer_month = get_power_month_hex(COM42, DEVICE_ADDRESS42, POWER_MONTH_MARCH)
+power_answer_month = get_power_month_hex(COM42, DEVICE_ADDRESS42, POWER_MONTH_APRIL)
 active_power_month42 = get_active_power_from_hex(power_answer_month, RATIO42)
 reactive_power_month42 = get_reactive_power_from_hex(power_answer_month, RATIO42)
-power_answer_month_begin = get_power_month_begin(COM42, DEVICE_ADDRESS42, POWER_MONTH_MARCH_BEGIN)
+power_answer_month_begin = get_power_month_begin(COM42, DEVICE_ADDRESS42, POWER_MONTH_APRIL_BEGIN)
 active_power_begin_month42 = get_active_power_from_hex(power_answer_month_begin, 1)
 reactive_power_begin_month42 = get_reactive_power_from_hex(power_answer_month_begin, 1)
-power_answer_month_end = get_power_month_begin(COM42, DEVICE_ADDRESS42, POWER_MONTH_APRIL_BEGIN)
+power_answer_month_end = get_power_month_begin(COM42, DEVICE_ADDRESS42, POWER_MONTH_MAY_BEGIN)
 active_power_end_month42 = get_active_power_from_hex(power_answer_month_end, 1)
 reactive_power_end_month42 = get_reactive_power_from_hex(power_answer_month_end, 1)
 
@@ -409,6 +430,16 @@ format_right_bold = workbook.add_format({
     'align': 'right',
     'valign': 'vcenter',
     'text_wrap': 1,
+})
+
+format_right_times_10 = workbook.add_format({
+    'bold': 0,
+    'border': 0,
+    'align': 'right',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 10,
 })
 
 format_right_with_borders_bold_times_12_number3 = workbook.add_format({
@@ -489,6 +520,7 @@ format_left_with_borders_times_12 = workbook.add_format({
     'font_size': 12,
 })
 
+
 format_center_without_borders_bold_times_16 = workbook.add_format({
     'bold': 1,
     'border': 0,
@@ -529,6 +561,25 @@ format_center_with_borders_times_12 = workbook.add_format({
     'text_wrap': 1,
     'font_name': 'Times New Roman',
     'font_size': 12,
+})
+
+format_center_times_12 = workbook.add_format({
+    'bold': 0,
+    'border': 0,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 12,
+})
+format_center_times_10 = workbook.add_format({
+    'bold': 0,
+    'border': 0,
+    'align': 'center',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 10,
 })
 
 format_center_with_borders_times_12_number = workbook.add_format({
@@ -638,7 +689,6 @@ worksheet.write('Z106', "=SUM(C75:Z105)*20", format_right_bold)
 worksheet.write('B109', ENGINEER + NAME)
 
 # -----------------NEXT SHEET 'Summa'-----------------
-
 worksheet2 = workbook.add_worksheet()
 worksheet2.name = 'Summa'
 
@@ -996,7 +1046,7 @@ worksheet4.merge_range('A35:K35', 'ИТОГО по договору №ЭСК-29
 worksheet4.write('L35', (active_power_month55 + active_power_month56 + active_power_month42 + ACTIVE_LOSS),
                  format_center_without_borders_bold_times_16_number4_bg_color)
 worksheet4.merge_range('A37:L37', 'Генеральный директор____________________________________________________',
-                       format_center_without_borders)
-worksheet4.merge_range('B40:D40', 'Исполнитель:______________________________', format_center_without_borders)
-worksheet4.merge_range('I40:L40', '______________________________ /дата/', format_right)
+                       format_center_times_12)
+worksheet4.write('A40', 'Исполнитель:______________________________', format_center_times_10)
+worksheet4.merge_range('I40:L40', '______________________________ /дата/', format_center_times_10)
 workbook.close()
