@@ -30,8 +30,8 @@ DATABASE_USER = 'user'
 DATABASE_PASSWORD = 'qwerty123'
 DATABASE = 'resources'
 # В этом типе счетчика только один банк памяти
-MEMORY_BANK1 = b'\x06\x83'
-MEMORY_BANK2 = b'\x06\x83'
+MEMORY_BANK1 = b'\x06\x03'
+MEMORY_BANK2 = b'\x06\x03'
 PERIOD = b'\x1E'
 PERIOD_HEX = 16
 
@@ -79,20 +79,11 @@ def convert_date(date_memory_answer_hex):
 
 
 def convert_memory(date_memory_answer_hex):
-    memory_block_for_check = date_memory_answer_hex[3]
-    if memory_block_for_check == 9:
-        memory_answer_text1 = "{0:#0{1}x}".format(date_memory_answer_hex[1], 4)[3]
-        memory_answer_text2 = "{0:#0{1}x}".format(date_memory_answer_hex[2], 4)[2:4]
-        memory_answer_text3 = "{0:#0{1}x}".format(date_memory_answer_hex[3], 4)[2]
-        memory_text = memory_answer_text1 + memory_answer_text2 + memory_answer_text3
-        memory_answer = bytes.fromhex(memory_text)
-    elif memory_block_for_check == 25:
-        memory_answer_text1 = "{0:#0{1}x}".format(date_memory_answer_hex[1], 4)[2:4]
-        memory_answer_text2 = "{0:#0{1}x}".format(date_memory_answer_hex[2], 4)[2:4]
-        memory_text = memory_answer_text1 + memory_answer_text2
-        memory_answer = bytes.fromhex(memory_text)
-    else:
-        memory_answer = ''
+    # В данном типе счетчика не используется смещение байт, поэтому убрал условие как в 56 и 42 счетчике
+    memory_answer_text1 = "{0:#0{1}x}".format(date_memory_answer_hex[1], 4)[2:4]
+    memory_answer_text2 = "{0:#0{1}x}".format(date_memory_answer_hex[2], 4)[2:4]
+    memory_text = memory_answer_text1 + memory_answer_text2
+    memory_answer = bytes.fromhex(memory_text)
     return memory_answer
 
 
