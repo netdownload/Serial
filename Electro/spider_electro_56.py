@@ -41,7 +41,7 @@ test_port_with_crc = TEST_PORT + crc16.to_bytes(2, byteorder='little')
 crc16 = libscrc.modbus(DATE_MEMORY_REQUEST)
 date_request_with_crc = DATE_MEMORY_REQUEST + crc16.to_bytes(2, byteorder='little')
 
-memory_bank = MEMORY_BANK1
+memory_bank = MEMORY_BANK2
 
 # TODO настроить время ротации и поправить отображение лога (время, дата)
 # Функция для настройки логирования
@@ -251,5 +251,5 @@ with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.ST
         print(active_power)
         reactive_power = split_reactive_power(power_profile_answer_from_device)
         print(reactive_power)
-        # insert_values_into_database(gas_datetime, active_power, reactive_power)
+        insert_values_into_database(gas_datetime, active_power, reactive_power)
     logging.debug('COM порт закрыт')
