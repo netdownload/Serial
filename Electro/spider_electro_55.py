@@ -243,5 +243,5 @@ with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.ST
         print(active_power)
         reactive_power = split_reactive_power(power_profile_answer_from_device)
         print(reactive_power)
-        # insert_values_into_database(gas_datetime, active_power, reactive_power)
+        insert_values_into_database(gas_datetime, active_power, reactive_power)
     logging.debug('COM порт закрыт')

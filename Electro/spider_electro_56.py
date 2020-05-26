@@ -41,7 +41,7 @@ test_port_with_crc = TEST_PORT + crc16.to_bytes(2, byteorder='little')
 crc16 = libscrc.modbus(DATE_MEMORY_REQUEST)
 date_request_with_crc = DATE_MEMORY_REQUEST + crc16.to_bytes(2, byteorder='little')
 
-memory_bank = MEMORY_BANK2
+memory_bank = MEMORY_BANK1
 
 # TODO настроить время ротации и поправить отображение лога (время, дата)
 # Функция для настройки логирования
