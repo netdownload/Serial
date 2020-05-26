@@ -23,7 +23,7 @@ INIT_PORT = DEVICE_NUMBER + b'\x01\x01\x01\x01\x01\x01\x01\x01'
 DATE_MEMORY_REQUEST = DEVICE_NUMBER + b'\x08\x13'
 # В ответе проверить байт стостояния, возможно он отвечает за то какой банк памяти брать
 DELAY = 0.2
-COM = 'COM7'
+COM = 'COM2'
 COM_SPEED = 9600
 DATABASE_HOST = '10.1.1.99'
 DATABASE_USER = 'user'
@@ -48,7 +48,7 @@ memory_bank = MEMORY_BANK2
 def log_setup():
     log_handler = logging.handlers.WatchedFileHandler('spider_electro.txt')
     formatter = logging.Formatter(
-        '%(asctime)s spider_electro42.py [%(process)d]: %(message)s',
+        '%(asctime)s spider_electro_42.py [%(process)d]: %(message)s',
         '%b %d %H:%M:%S')
     formatter.converter = time.gmtime  # if you want UTC time
     log_handler.setFormatter(formatter)
@@ -247,5 +247,5 @@ with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.ST
         print(active_power)
         reactive_power = split_reactive_power(power_profile_answer_from_device)
         print(reactive_power)
-        insert_values_into_database(gas_datetime, active_power, reactive_power)
+        # insert_values_into_database(gas_datetime, active_power, reactive_power)
     logging.debug('COM порт закрыт')
