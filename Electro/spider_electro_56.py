@@ -150,14 +150,18 @@ def split_result_datetime(power_profile_answer):
 
 
 def split_active_power(power_profile_answer):
-    result_active_power = power_profile_answer[8] + power_profile_answer[9]
-    active_power = float(result_active_power / 1000)
+    result_active_power1 = "{0:#0{1}x}".format(power_profile_answer[9], 4)[2:4]
+    result_active_power2 = "{0:#0{1}x}".format(power_profile_answer[8], 4)[2:4]
+    active_power_hex = result_active_power1 + result_active_power2
+    active_power = int(active_power_hex, 16) / 1000
     return active_power
 
 
 def split_reactive_power(power_profile_answer):
-    result_reactive_power = power_profile_answer[12] + power_profile_answer[13]
-    reactive_power = float(result_reactive_power / 1000)
+    result_reactive_power1 = "{0:#0{1}x}".format(power_profile_answer[13], 4)[2:4]
+    result_reactive_power2 = "{0:#0{1}x}".format(power_profile_answer[12], 4)[2:4]
+    reactive_power_hex = result_reactive_power1 + result_reactive_power2
+    reactive_power = int(reactive_power_hex, 16) / 1000
     return reactive_power
 
 
