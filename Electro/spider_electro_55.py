@@ -17,20 +17,20 @@ import pymysql
 import serial
 import sys
 
-DEVICE_NUMBER = b'\x5E'  # Очистные
-
+DEVICE_NUMBER = b'\x5D'  # ТП-1
 TEST_PORT = DEVICE_NUMBER + b'\x00'  # запрос на тестирование порта, в ответе должно прийти то же значение
 INIT_PORT = DEVICE_NUMBER + b'\x01\x01\x01\x01\x01\x01\x01\x01'
 DATE_MEMORY_REQUEST = DEVICE_NUMBER + b'\x08\x13'
 # В ответе проверить байт стостояния, возможно он отвечает за то какой банк памяти брать
 DELAY = 0.2
-COM = 'COM6'
+COM = 'COM8'
 COM_SPEED = 9600
 DATABASE_HOST = '10.1.1.99'
 DATABASE_USER = 'user'
 DATABASE_PASSWORD = 'qwerty123'
 DATABASE = 'resources'
-MEMORY_BANK1 = b'\x06\x03'
+# В этом типе счетчика только один банк памяти
+MEMORY_BANK1 = b'\x06\x83'
 MEMORY_BANK2 = b'\x06\x83'
 PERIOD = b'\x1E'
 PERIOD_HEX = 16
@@ -42,6 +42,7 @@ test_port_with_crc = TEST_PORT + crc16.to_bytes(2, byteorder='little')
 crc16 = libscrc.modbus(DATE_MEMORY_REQUEST)
 date_request_with_crc = DATE_MEMORY_REQUEST + crc16.to_bytes(2, byteorder='little')
 
+memory_bank = MEMORY_BANK2
 
 # TODO настроить время ротации и поправить отображение лога (время, дата)
 # Функция для настройки логирования
@@ -80,9 +81,10 @@ def convert_date(date_memory_answer_hex):
 def convert_memory(date_memory_answer_hex):
     memory_block_for_check = date_memory_answer_hex[3]
     if memory_block_for_check == 9:
-        memory_answer_text1 = "{0:#0{1}x}".format(date_memory_answer_hex[1], 4)[2:4]
+        memory_answer_text1 = "{0:#0{1}x}".format(date_memory_answer_hex[1], 4)[3]
         memory_answer_text2 = "{0:#0{1}x}".format(date_memory_answer_hex[2], 4)[2:4]
-        memory_text = memory_answer_text1 + memory_answer_text2
+        memory_answer_text3 = "{0:#0{1}x}".format(date_memory_answer_hex[3], 4)[2]
+        memory_text = memory_answer_text1 + memory_answer_text2 + memory_answer_text3
         memory_answer = bytes.fromhex(memory_text)
     elif memory_block_for_check == 25:
         memory_answer_text1 = "{0:#0{1}x}".format(date_memory_answer_hex[1], 4)[2:4]
@@ -102,7 +104,7 @@ def get_last_date_from_database():
                                  db=DATABASE)
     try:
         with connection.cursor() as cursor:
-            sql = 'SELECT electro42_datetime FROM electro42 ORDER BY electro42_datetime DESC LIMIT 0, 1'
+            sql = 'SELECT electro55_datetime FROM electro55 ORDER BY electro55_datetime DESC LIMIT 0, 1'
             cursor.execute(sql)
             result = cursor.fetchone()
             datetime_last = result[0]
@@ -139,6 +141,7 @@ def delta_period(date_end, date_begin):
 
 
 def split_result_datetime(power_profile_answer):
+    # TODO Обработать исключение, если в ответе будет '', т.е. из порта не поступят данные
     result_datetime = hex(power_profile_answer[4])[2:4] + '.' + hex(power_profile_answer[5])[2:4] + '.' + hex(
         power_profile_answer[6])[2:4] + ' ' + hex(power_profile_answer[2])[2:4] + ':' + hex(
         power_profile_answer[3])[2:4]
@@ -162,6 +165,8 @@ def split_reactive_power(power_profile_answer):
 def get_start_memory(memory_from_device, delta_in_period):
     int_memory = int.from_bytes(memory_from_device, byteorder='big')
     start_memory = int_memory - delta_in_period * PERIOD_HEX
+    if start_memory < 0:
+        start_memory = 65536 + start_memory
     start_memory_hex = start_memory.to_bytes(2, byteorder='big')
     return start_memory_hex
 
@@ -169,12 +174,15 @@ def get_start_memory(memory_from_device, delta_in_period):
 def get_next_memory(memory):
     int_memory = int.from_bytes(memory, byteorder='big')
     next_memory = int_memory + PERIOD_HEX
+    if next_memory > 65535:
+        next_memory = 0
+        rotate_memory_bank()
     next_memory_hex = next_memory.to_bytes(2, byteorder='big')
     return next_memory_hex
 
 
-def create_profile_request(memory_request):
-    power_profile_request = DEVICE_NUMBER + MEMORY_BANK1 + memory_request + PERIOD
+def create_profile_request(memory_request, memory_bank_req):
+    power_profile_request = DEVICE_NUMBER + memory_bank_req + memory_request + PERIOD
     crc16 = libscrc.modbus(power_profile_request)
     power_profile_request_with_crc = power_profile_request + crc16.to_bytes(2, byteorder='little')
     return power_profile_request_with_crc
@@ -185,6 +193,16 @@ def check_memory_bank():
     pass
 
 
+def rotate_memory_bank():
+    # https://stackoverflow.com/questions/423379/using-global-variables-in-a-function
+    global memory_bank
+    if memory_bank == MEMORY_BANK1:
+        memory_bank = MEMORY_BANK2
+    if memory_bank == MEMORY_BANK2:
+        memory_bank = MEMORY_BANK1
+    return 0
+
+
 # Функция записывает считаные данные в базу
 def insert_values_into_database(gas_datetime, active_power, reactive_power):
     connection = pymysql.connect(host=DATABASE_HOST,
@@ -193,7 +211,7 @@ def insert_values_into_database(gas_datetime, active_power, reactive_power):
                                  db=DATABASE)
     try:
         with connection.cursor() as cursor:
-            sql = "INSERT INTO `electro42` (`electro42_datetime`, `electro42_active`, `electro42_reactive`) VALUES (" \
+            sql = "INSERT INTO `electro55` (`electro55_datetime`, `electro55_active`, `electro55_reactive`) VALUES (" \
                   "%s, %s, %s)"
             cursor.execute(sql, (gas_datetime, active_power, reactive_power))
             connection.commit()
@@ -215,8 +233,9 @@ with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.ST
     ser.write(init_port_with_crc)
     time.sleep(DELAY)
     ser.readall()
-    for period in range(delta_period_int * 2 + 1):
-        power_profile_request_with_crc = create_profile_request(memory_start)
+    for period in range(delta_period_int):
+        memory_start = get_next_memory(memory_start)
+        power_profile_request_with_crc = create_profile_request(memory_start, memory_bank)
         time.sleep(DELAY)
         ser.write(power_profile_request_with_crc)
         time.sleep(DELAY)
@@ -229,6 +248,5 @@ with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.ST
         print(active_power)
         reactive_power = split_reactive_power(power_profile_answer_from_device)
         print(reactive_power)
-        memory_start = get_next_memory(memory_start)
-        insert_values_into_database(gas_datetime, active_power, reactive_power)
+        # insert_values_into_database(gas_datetime, active_power, reactive_power)
     logging.debug('COM порт закрыт')
