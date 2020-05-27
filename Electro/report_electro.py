@@ -86,9 +86,9 @@ DATABASE_USER = 'user'
 DATABASE_PASSWORD = 'qwerty123'
 DATABASE = 'resources'
 # --------------------------
-date_time_begin = '2020-04-01 00:30:00'
+date_time_begin = '2020-05-01 00:30:00'
 date_time_begin_obj = datetime.datetime.strptime(date_time_begin, '%Y-%m-%d %H:%M:%S')
-date_time_end = '2020-05-01 00:00:00'
+date_time_end = '2020-05-27 00:00:00'
 date_time_end_obj = datetime.datetime.strptime(date_time_end, '%Y-%m-%d %H:%M:%S')
 
 

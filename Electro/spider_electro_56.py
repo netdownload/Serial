@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+# ^ для запуска скрипта в Linux
 # bd 1d f3 09 22 30 14 05 20 1e 6f 54
 # Не понятно как рассчитывать последнюю запись в ячейке
 # Возможно надо ориентироваться по 3 байту "09" и брать ячейку d f3 0
@@ -23,7 +25,9 @@ INIT_PORT = DEVICE_NUMBER + b'\x01\x01\x01\x01\x01\x01\x01\x01'
 DATE_MEMORY_REQUEST = DEVICE_NUMBER + b'\x08\x13'
 # В ответе проверить байт стостояния, возможно он отвечает за то какой банк памяти брать
 DELAY = 0.2
-COM = 'COM2'
+# Настройка COM порта в Linux
+# COM = '/dev/ttyr02'
+COM = 'COM7'
 COM_SPEED = 9600
 DATABASE_HOST = '10.1.1.99'
 DATABASE_USER = 'user'
@@ -41,12 +45,12 @@ test_port_with_crc = TEST_PORT + crc16.to_bytes(2, byteorder='little')
 crc16 = libscrc.modbus(DATE_MEMORY_REQUEST)
 date_request_with_crc = DATE_MEMORY_REQUEST + crc16.to_bytes(2, byteorder='little')
 
-memory_bank = MEMORY_BANK2
+memory_bank = MEMORY_BANK1
 
 # TODO настроить время ротации и поправить отображение лога (время, дата)
 # Функция для настройки логирования
 def log_setup():
-    log_handler = logging.handlers.WatchedFileHandler('spider_electro.txt')
+    log_handler = logging.handlers.WatchedFileHandler('spider_electro_56.txt')
     formatter = logging.Formatter(
         '%(asctime)s spider_electro_42.py [%(process)d]: %(message)s',
         '%b %d %H:%M:%S')
@@ -192,8 +196,22 @@ def create_profile_request(memory_request, memory_bank_req):
 
 
 # TODO Функция проверки перехода с одного банка памяти на другой
-def check_memory_bank():
-    pass
+def check_memory_bank(memory_bank_test, memory_test, date_test):
+    power_profile_request_test_with_crc = create_profile_request(memory_test, memory_bank_test)
+    with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+                       bytesize=serial.EIGHTBITS, timeout=1) as ser:
+        ser.write(init_port_with_crc)
+        time.sleep(DELAY)
+        ser.readall()
+        time.sleep(DELAY)
+        ser.write(power_profile_request_test_with_crc)
+        time.sleep(DELAY)
+        power_profile_request_test_hex = ser.readall()
+        time.sleep(DELAY)
+    date_test_memory_bank = split_result_datetime(power_profile_request_test_hex)
+    if date_test_memory_bank != date_test:
+        rotate_memory_bank()
+    return 0
 
 
 def rotate_memory_bank():
@@ -227,7 +245,9 @@ check_com_port()
 
 date_memory_answer_hex = get_date_memory_from_device()
 memory_hex = convert_memory(date_memory_answer_hex)
-delta_period_int = delta_period(convert_date(date_memory_answer_hex), get_last_date_from_database())
+date_memory = convert_date(date_memory_answer_hex)
+check_memory_bank(memory_bank, memory_hex, date_memory)
+delta_period_int = delta_period(date_memory, get_last_date_from_database())
 memory_start = get_start_memory(memory_hex, delta_period_int)
 
 with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
