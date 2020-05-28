@@ -4,7 +4,6 @@
 import xlsxwriter
 # Библиотека для работы с базой данных MySQL
 import pymysql
-import sys
 import datetime
 import time
 # Библиотека для расчета контрольной суммы
@@ -12,6 +11,7 @@ import libscrc
 import serial
 import sys
 import argparse
+from decimal import Decimal
 
 COMPANY = 'ОАО "Аньковское"'
 ENGINEER = 'Главный энергетик_________________'
@@ -410,10 +410,10 @@ parser = create_parser()
 namespace = parser.parse_args()
 print(namespace)
 
-# date_time_begin = '2020-02-01 00:30:00'
+# date_time_begin = '2020-01-01 00:30:00'
 date_time_begin = '2020-' + namespace.date_begin + '-01 0:30:00'
 date_time_begin_obj = datetime.datetime.strptime(date_time_begin, '%Y-%m-%d %H:%M:%S')
-# date_time_end = '2020-03-01 00:00:00'
+# date_time_end = '2020-02-01 00:00:00'
 date_time_end = '2020-' + namespace.date_end + '-01 00:00:00'
 date_time_end_obj = datetime.datetime.strptime(date_time_end, '%Y-%m-%d %H:%M:%S')
 
@@ -739,7 +739,7 @@ power_active_sum_55 = 0
 for rows in range(0, int((delta + 1) / 24 / 2), 1):
     for cells in range(0, 48, 2):
         worksheet.write(rows + 6, (cells + 2) / 2 + 1, (answer55[cells_in] + answer55[cells_in + 1]) / 2, format_right)
-        power_active_sum_55 = power_active_sum_55 + (answer55[cells_in] + answer55[cells_in + 1]) / 2 * RATIO55
+        power_active_sum_55 = power_active_sum_55 + Decimal((answer55[cells_in] + answer55[cells_in + 1]) / 2 * RATIO55)
         cells_in += 2
 
 worksheet.write('Y38', 'ИТОГО', format_left_bold)
@@ -765,7 +765,7 @@ power_active_sum_56 = 0
 for rows in range(0, int((delta + 1) / 24 / 2), 1):
     for cells in range(0, 48, 2):
         worksheet.write(rows + 40, (cells + 2) / 2 + 1, (answer56[cells_in] + answer56[cells_in + 1]) / 2, format_right)
-        power_active_sum_56 = power_active_sum_56 + (answer56[cells_in] + answer56[cells_in + 1]) / 2 * RATIO56
+        power_active_sum_56 = power_active_sum_56 + Decimal((answer56[cells_in] + answer56[cells_in + 1]) / 2 * RATIO56)
         cells_in += 2
 
 worksheet.write('Y72', 'ИТОГО', format_left_bold)
@@ -791,7 +791,7 @@ power_active_sum_42 = 0
 for rows in range(0, int((delta + 1) / 24 / 2), 1):
     for cells in range(0, 48, 2):
         worksheet.write(rows + 74, (cells + 2) / 2 + 1, (answer42[cells_in] + answer42[cells_in + 1]) / 2, format_right)
-        power_active_sum_42 = power_active_sum_42 + (answer42[cells_in] + answer42[cells_in + 1]) / 2 * RATIO42
+        power_active_sum_42 = power_active_sum_42 + Decimal((answer42[cells_in] + answer42[cells_in + 1]) / 2 * RATIO42)
         cells_in += 2
 
 worksheet.write('Y106', 'ИТОГО', format_left_bold)
