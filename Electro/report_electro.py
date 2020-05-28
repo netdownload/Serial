@@ -12,6 +12,12 @@ import serial
 import sys
 import argparse
 from decimal import Decimal
+import smtplib
+import email
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 COMPANY = 'ОАО "Аньковское"'
 ENGINEER = 'Главный энергетик_________________'
@@ -1163,3 +1169,23 @@ worksheet4.merge_range('A37:L37', 'Генеральный директор______
 worksheet4.write('A40', 'Исполнитель:______________________________', format_center_times_10)
 worksheet4.merge_range('I40:L40', '______________________________ /дата/', format_center_times_10)
 workbook.close()
+
+# Отправка отчета по почте
+HOST = "mail.tm-ankovo.ru"
+SUBJECT = "Test email from Python"
+TO = "sa@tm-ankovo.ru"
+FROM = "sa@tm-ankovo.ru"
+text = "Python 3.4 rules them all!"
+
+BODY = "\r\n".join((
+    "From: %s" % FROM,
+    "To: %s" % TO,
+    "Subject: %s" % SUBJECT,
+    "",
+    text
+))
+
+server = smtplib.SMTP(HOST)
+server.login('sa@tm-ankovo.ru', 'password')
+server.sendmail(FROM, [TO], BODY)
+server.quit()
