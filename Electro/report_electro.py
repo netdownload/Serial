@@ -11,6 +11,7 @@ import time
 import libscrc
 import serial
 import sys
+import argparse
 
 COMPANY = 'ОАО "Аньковское"'
 ENGINEER = 'Главный энергетик_________________'
@@ -20,9 +21,6 @@ PHONE_NUMBER = '(49353) 33102'
 CONTRACT_NUMBER = '29'
 CONTRACT_NUMBER2 = 'ЭСК-29'
 CONTRACT_DATE = '01.07.2014'
-# TODO Месяц и год надо брать из запроса
-MONTH = 'Апрель'
-YEAR = 2020
 # ------------------------
 DEVICE55 = 'Меркурий 230 ART-01'
 DEVICE56 = 'Меркурий 236 ART-03'
@@ -85,11 +83,81 @@ DATABASE_HOST = '10.1.1.99'
 DATABASE_USER = 'user'
 DATABASE_PASSWORD = 'qwerty123'
 DATABASE = 'resources'
+
+
 # --------------------------
-date_time_begin = '2020-05-01 00:30:00'
-date_time_begin_obj = datetime.datetime.strptime(date_time_begin, '%Y-%m-%d %H:%M:%S')
-date_time_end = '2020-05-27 00:00:00'
-date_time_end_obj = datetime.datetime.strptime(date_time_end, '%Y-%m-%d %H:%M:%S')
+
+
+# Инициализация параметров: определение месяца, запросов энергии по данной дате из счетчика
+def init_parameters(date_begin):
+    month_big_text = ''
+    power_mon = ''
+    power_mon_begin = ''
+    power_mon_end = ''
+    if date_begin.month == 1:
+        month_text = 'Январь'
+        power_mon = POWER_MONTH_JANUARY
+        power_mon_begin = POWER_MONTH_JANUARY_BEGIN
+        power_mon_end = POWER_MONTH_FEBRUARY_BEGIN
+    if date_begin.month == 2:
+        month_text = 'Февраль'
+        power_mon = POWER_MONTH_FEBRUARY
+        power_mon_begin = POWER_MONTH_FEBRUARY_BEGIN
+        power_mon_end = POWER_MONTH_MARCH_BEGIN
+    if date_begin.month == 3:
+        month_text = 'Март'
+        power_mon = POWER_MONTH_MARCH
+        power_mon_begin = POWER_MONTH_MARCH_BEGIN
+        power_mon_end = POWER_MONTH_APRIL_BEGIN
+    if date_begin.month == 4:
+        month_text = 'Апрель'
+        power_mon = POWER_MONTH_APRIL
+        power_mon_begin = POWER_MONTH_APRIL_BEGIN
+        power_mon_end = POWER_MONTH_MAY_BEGIN
+    if date_begin.month == 5:
+        month_text = 'Май'
+        power_mon = POWER_MONTH_MAY
+        power_mon_begin = POWER_MONTH_MAY_BEGIN
+        power_mon_end = POWER_MONTH_JUNE_BEGIN
+    if date_begin.month == 6:
+        month_text = 'Июнь'
+        power_mon = POWER_MONTH_JUNE
+        power_mon_begin = POWER_MONTH_JUNE_BEGIN
+        power_mon_end = POWER_MONTH_JULY_BEGIN
+    if date_begin.month == 7:
+        month_text = 'Июль'
+        power_mon = POWER_MONTH_JULY
+        power_mon_begin = POWER_MONTH_JULY_BEGIN
+        power_mon_end = POWER_MONTH_AUGUST_BEGIN
+    if date_begin.month == 8:
+        month_text = 'Август'
+        power_mon = POWER_MONTH_AUGUST
+        power_mon_begin = POWER_MONTH_AUGUST_BEGIN
+        power_mon_end = POWER_MONTH_SEPTEMBER_BEGIN
+    if date_begin.month == 9:
+        month_text = 'Сентябрь'
+        power_mon = POWER_MONTH_SEPTEMBER
+        power_mon_begin = POWER_MONTH_SEPTEMBER_BEGIN
+        power_mon_end = POWER_MONTH_OCTOBER_BEGIN
+    if date_begin.month == 10:
+        month_text = 'Октябрь'
+        power_mon = POWER_MONTH_OCTOBER
+        power_mon_begin = POWER_MONTH_OCTOBER_BEGIN
+        power_mon_end = POWER_MONTH_NOVEMBER_BEGIN
+    if date_begin.month == 11:
+        month_text = 'Ноябрь'
+        power_mon = POWER_MONTH_NOVEMBER
+        power_mon_begin = POWER_MONTH_NOVEMBER_BEGIN
+        power_mon_end = POWER_MONTH_DECEMBER_BEGIN
+    if date_begin.month == 12:
+        month_text = 'Декабрь'
+        power_mon = POWER_MONTH_DECEMBER
+        power_mon_begin = POWER_MONTH_DECEMBER_BEGIN
+        power_mon_end = POWER_MONTH_JANUARY_BEGIN
+    year_text = date_begin.year
+    for chars in month_text:
+        month_big_text = month_big_text + chars.capitalize() + ' '
+    return month_text, year_text, month_big_text, power_mon, power_mon_begin, power_mon_end
 
 
 # Функция для проверки доступности базы данных
@@ -117,6 +185,7 @@ def check_com_port(com_port):
         sys.exit("Порт недоступен")
 
 
+# Функция для определения серийного номера счетчика
 def get_device_number(com_port, device_address):
     crc16 = libscrc.modbus(device_address + INIT_PORT)
     init_port_with_crc = device_address + INIT_PORT + crc16.to_bytes(2, byteorder='little')
@@ -148,6 +217,7 @@ def get_device_number(com_port, device_address):
         return device_number_text
 
 
+# Функция для получения энергии за месяц в HEX представлении
 def get_power_month_hex(com_port, device_address, power_month):
     crc16 = libscrc.modbus(device_address + INIT_PORT)
     init_port_with_crc = device_address + INIT_PORT + crc16.to_bytes(2, byteorder='little')
@@ -165,6 +235,7 @@ def get_power_month_hex(com_port, device_address, power_month):
     return power_month_hex
 
 
+# Функция для преобразования активной энергии из HEX в число
 def get_active_power_from_hex(power_answer, ratio):
     active_power_hex1 = str(hex(power_answer[2])[2:])
     active_power_hex2 = str(hex(power_answer[1])[2:])
@@ -183,6 +254,7 @@ def get_active_power_from_hex(power_answer, ratio):
     return active_power
 
 
+# Функция для преобразования реактивной энергии из HEX в число
 def get_reactive_power_from_hex(power_answer, ratio):
     reactive_power_hex1 = str(hex(power_answer[10])[2:])
     reactive_power_hex2 = str(hex(power_answer[9])[2:])
@@ -201,6 +273,7 @@ def get_reactive_power_from_hex(power_answer, ratio):
     return reactive_power
 
 
+# Функция для получения значений накопленой энергии на начало месяца
 def get_power_month_begin(com_port, device_address, month_begin):
     crc16 = libscrc.modbus(device_address + INIT_PORT)
     init_port_with_crc = device_address + INIT_PORT + crc16.to_bytes(2, byteorder='little')
@@ -316,51 +389,71 @@ def get_power_values_from_database56(date_begin, date_end):
     return answer_from_database56
 
 
+# Функция для расчета количества периодов между датами
 def delta_period(date_end, date_begin):
     if date_begin <= date_end:
         delta_in_period = (date_end - date_begin).total_seconds() // 1800
-        print('Разница в периоде 30 минут: ' + str(delta_in_period))
         return int(delta_in_period)
     else:
-        print('Разница в равна нулю или последнее время из базы <= текущему времени')
         return 0
 
+# Запуск скрипта с параметрами
+# https://jenyay.net/Programming/Argparse
+def create_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('date_begin', nargs='?')
+    parser.add_argument('date_end', nargs='?')
+    return parser
+
+
+parser = create_parser()
+namespace = parser.parse_args()
+print(namespace)
+
+# date_time_begin = '2020-02-01 00:30:00'
+date_time_begin = '2020-' + namespace.date_begin + '-01 0:30:00'
+date_time_begin_obj = datetime.datetime.strptime(date_time_begin, '%Y-%m-%d %H:%M:%S')
+# date_time_end = '2020-03-01 00:00:00'
+date_time_end = '2020-' + namespace.date_end + '-01 00:00:00'
+date_time_end_obj = datetime.datetime.strptime(date_time_end, '%Y-%m-%d %H:%M:%S')
 
 check_database_connection()
-
+month_txt, year_txt, month_big_txt, power_month, power_month_begin, power_month_end = init_parameters(
+    date_time_begin_obj)
 check_com_port(COM55)
+
 device_number55 = get_device_number(COM55, DEVICE_ADDRESS55)
-power_answer_month = get_power_month_hex(COM55, DEVICE_ADDRESS55, POWER_MONTH_APRIL)
+power_answer_month = get_power_month_hex(COM55, DEVICE_ADDRESS55, power_month)
 active_power_month55 = get_active_power_from_hex(power_answer_month, RATIO55)
 reactive_power_month55 = get_reactive_power_from_hex(power_answer_month, RATIO55)
-power_answer_month_begin = get_power_month_begin(COM55, DEVICE_ADDRESS55, POWER_MONTH_APRIL_BEGIN)
+power_answer_month_begin = get_power_month_begin(COM55, DEVICE_ADDRESS55, power_month_begin)
 active_power_begin_month55 = get_active_power_from_hex(power_answer_month_begin, 1)
 reactive_power_begin_month55 = get_reactive_power_from_hex(power_answer_month_begin, 1)
-power_answer_month_end = get_power_month_begin(COM55, DEVICE_ADDRESS55, POWER_MONTH_MAY_BEGIN)
+power_answer_month_end = get_power_month_begin(COM55, DEVICE_ADDRESS55, power_month_end)
 active_power_end_month55 = get_active_power_from_hex(power_answer_month_end, 1)
 reactive_power_end_month55 = get_reactive_power_from_hex(power_answer_month_end, 1)
 
 check_com_port(COM56)
 device_number56 = get_device_number(COM56, DEVICE_ADDRESS56)
-power_answer_month = get_power_month_hex(COM56, DEVICE_ADDRESS56, POWER_MONTH_APRIL)
+power_answer_month = get_power_month_hex(COM56, DEVICE_ADDRESS56, power_month)
 active_power_month56 = get_active_power_from_hex(power_answer_month, RATIO56)
 reactive_power_month56 = get_reactive_power_from_hex(power_answer_month, RATIO56)
-power_answer_month_begin = get_power_month_begin(COM56, DEVICE_ADDRESS56, POWER_MONTH_APRIL_BEGIN)
+power_answer_month_begin = get_power_month_begin(COM56, DEVICE_ADDRESS56, power_month_begin)
 active_power_begin_month56 = get_active_power_from_hex(power_answer_month_begin, 1)
 reactive_power_begin_month56 = get_reactive_power_from_hex(power_answer_month_begin, 1)
-power_answer_month_end = get_power_month_begin(COM56, DEVICE_ADDRESS56, POWER_MONTH_MAY_BEGIN)
+power_answer_month_end = get_power_month_begin(COM56, DEVICE_ADDRESS56, power_month_end)
 active_power_end_month56 = get_active_power_from_hex(power_answer_month_end, 1)
 reactive_power_end_month56 = get_reactive_power_from_hex(power_answer_month_end, 1)
 
 check_com_port(COM42)
 device_number42 = get_device_number(COM42, DEVICE_ADDRESS42)
-power_answer_month = get_power_month_hex(COM42, DEVICE_ADDRESS42, POWER_MONTH_APRIL)
+power_answer_month = get_power_month_hex(COM42, DEVICE_ADDRESS42, power_month)
 active_power_month42 = get_active_power_from_hex(power_answer_month, RATIO42)
 reactive_power_month42 = get_reactive_power_from_hex(power_answer_month, RATIO42)
-power_answer_month_begin = get_power_month_begin(COM42, DEVICE_ADDRESS42, POWER_MONTH_APRIL_BEGIN)
+power_answer_month_begin = get_power_month_begin(COM42, DEVICE_ADDRESS42, power_month_begin)
 active_power_begin_month42 = get_active_power_from_hex(power_answer_month_begin, 1)
 reactive_power_begin_month42 = get_reactive_power_from_hex(power_answer_month_begin, 1)
-power_answer_month_end = get_power_month_begin(COM42, DEVICE_ADDRESS42, POWER_MONTH_MAY_BEGIN)
+power_answer_month_end = get_power_month_begin(COM42, DEVICE_ADDRESS42, power_month_end)
 active_power_end_month42 = get_active_power_from_hex(power_answer_month_end, 1)
 reactive_power_end_month42 = get_reactive_power_from_hex(power_answer_month_end, 1)
 
@@ -454,6 +547,18 @@ format_right_with_borders_bold_times_12_number3 = workbook.add_format({
     # 'num_format': x -> https://xlsxwriter.readthedocs.io/format.html#num-format-categories
 })
 
+format_right_with_borders_bold_times_14_number3 = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'right',
+    'valign': 'vcenter',
+    'text_wrap': 1,
+    'font_name': 'Times New Roman',
+    'font_size': 14,
+    'num_format': 3,
+    # 'num_format': x -> https://xlsxwriter.readthedocs.io/format.html#num-format-categories
+})
+
 format_right_without_borders_bold = workbook.add_format({
     'bold': 1,
     'border': 0,
@@ -519,7 +624,6 @@ format_left_with_borders_times_12 = workbook.add_format({
     'font_name': 'Times New Roman',
     'font_size': 12,
 })
-
 
 format_center_without_borders_bold_times_16 = workbook.add_format({
     'bold': 1,
@@ -608,7 +712,8 @@ worksheet.set_column('A:A', 23.3)
 worksheet.set_column('B:Z', 11.3)
 
 worksheet.write('A1', COMPANY, bold)
-worksheet.write('A2', 'Отчет за потребленную электроэнергию и мощность, ' + MONTH + ' ' + str(YEAR) + ' г.', bold)
+worksheet.write('A2', 'Отчет за потребленную электроэнергию и мощность, ' + month_txt + ' ' + str(year_txt) + ' г.',
+                bold)
 
 worksheet.write('A3', 'Счетчик №')
 worksheet.write('B3', device_number55, format_right_without_borders_bold)
@@ -630,17 +735,17 @@ for rows in range(0, 31, 1):
         worksheet.write(rows + 6, cells + 2, None, format_right)
 
 cells_in = 0
-
+power_active_sum_55 = 0
 for rows in range(0, int((delta + 1) / 24 / 2), 1):
     for cells in range(0, 48, 2):
         worksheet.write(rows + 6, (cells + 2) / 2 + 1, (answer55[cells_in] + answer55[cells_in + 1]) / 2, format_right)
-        print('cell = ', cells_in)
-        print('A1 = ', answer55[cells_in], ' A2 = ', answer55[cells_in + 1])
-        print((answer55[cells_in] + answer55[cells_in + 1]) / 2)
+        power_active_sum_55 = power_active_sum_55 + (answer55[cells_in] + answer55[cells_in + 1]) / 2 * RATIO55
         cells_in += 2
 
 worksheet.write('Y38', 'ИТОГО', format_left_bold)
-worksheet.write('Z38', '=SUM(C7:Z37)*120', format_right_bold)
+# в MS Excel 2003 не происходит расчет формул на первом листе
+# worksheet.write('Z38', '=SUM(C7:Z37)*120', format_right_bold)
+worksheet.write('Z38', power_active_sum_55, format_right_bold)
 
 worksheet.write('A39', 'Счетчик №')
 worksheet.write('B39', device_number56, format_right_without_borders_bold)
@@ -653,15 +758,20 @@ for rows in range(0, 31, 1):
 for rows in range(0, 31, 1):
     for cells in range(0, 24, 1):
         worksheet.write(rows + 40, cells + 2, None, format_right)
+
 cells_in = 0
+power_active_sum_56 = 0
 
 for rows in range(0, int((delta + 1) / 24 / 2), 1):
     for cells in range(0, 48, 2):
         worksheet.write(rows + 40, (cells + 2) / 2 + 1, (answer56[cells_in] + answer56[cells_in + 1]) / 2, format_right)
+        power_active_sum_56 = power_active_sum_56 + (answer56[cells_in] + answer56[cells_in + 1]) / 2 * RATIO56
         cells_in += 2
 
 worksheet.write('Y72', 'ИТОГО', format_left_bold)
-worksheet.write('Z72', '=SUM(C41:Z71)*120', format_right_bold)
+# в MS Excel 2003 не происходит расчет формул на первом листе
+# worksheet.write('Z72', '=SUM(C41:Z71)*120', format_right_bold)
+worksheet.write('Z72', power_active_sum_56, format_right_bold)
 
 worksheet.write('A73', 'Счетчик №')
 worksheet.write('B73', device_number42, format_right_without_borders_bold)
@@ -676,15 +786,18 @@ for rows in range(0, 31, 1):
         worksheet.write(rows + 74, cells + 2, None, format_right)
 
 cells_in = 0
+power_active_sum_42 = 0
 
 for rows in range(0, int((delta + 1) / 24 / 2), 1):
     for cells in range(0, 48, 2):
         worksheet.write(rows + 74, (cells + 2) / 2 + 1, (answer42[cells_in] + answer42[cells_in + 1]) / 2, format_right)
+        power_active_sum_42 = power_active_sum_42 + (answer42[cells_in] + answer42[cells_in + 1]) / 2 * RATIO42
         cells_in += 2
 
 worksheet.write('Y106', 'ИТОГО', format_left_bold)
-# TODO в MS Excel 2003 не происходит расчет формул на первом листе
-worksheet.write('Z106', "=SUM(C75:Z105)*20", format_right_bold)
+# в MS Excel 2003 не происходит расчет формул на первом листе
+# worksheet.write('Z106', "=SUM(C75:Z105)*20", format_right_bold)
+worksheet.write('Z106', power_active_sum_42, format_right_bold)
 
 worksheet.write('B109', ENGINEER + NAME)
 
@@ -697,7 +810,7 @@ worksheet2.set_column('B:Z', 11.3)
 
 worksheet2.merge_range('A1:Z1', 'Сведения', format_center_without_borders)
 worksheet2.merge_range('G2:T2', 'о фактическом почасовом расходе электрической энергии за '
-                       + MONTH + ' ' + str(YEAR) + ' года ' + COMPANY, format_center_without_borders)
+                       + month_txt + ' ' + str(year_txt) + ' года ' + COMPANY, format_center_without_borders)
 worksheet2.merge_range('B3:D3', 'Договор №' + CONTRACT_NUMBER)
 worksheet2.merge_range('B5:B6', 'Число расчетного месяца', format_center)
 worksheet2.set_row(5, 30)
@@ -805,7 +918,7 @@ worksheet3.set_column('F:F', 14.3)
 worksheet3.set_column('G:G', 14.3)
 
 worksheet3.merge_range('A1:G1', 'СВЕДЕНИЯ', format_center_without_borders_bold)
-worksheet3.merge_range('A2:G2', 'о расходе электроэнергии по ' + COMPANY + ', за ' + MONTH + ' ' + str(YEAR)
+worksheet3.merge_range('A2:G2', 'о расходе электроэнергии по ' + COMPANY + ', за ' + month_txt + ' ' + str(year_txt)
                        + ' года.', format_center_without_borders_bold)
 worksheet3.set_row(2, 30)
 worksheet3.merge_range('A3:A4', '№ п/п', format_center_bold)
@@ -930,7 +1043,7 @@ worksheet4.set_row(25, 30)
 worksheet4.set_row(26, 15)
 
 worksheet4.merge_range('A1:L1', 'СВЕДЕНИЯ', format_center_without_borders_bold_times_16)
-worksheet4.merge_range('A2:L2', 'о расходе электроэнергии за ' + MONTH + ' ' + str(YEAR) + ' г.',
+worksheet4.merge_range('A2:L2', 'о расходе электроэнергии за ' + month_big_txt + str(year_txt) + ' г.',
                        format_center_without_borders_bold_times_14)
 worksheet4.merge_range('A4:L4', COMPANY + ' № ' + CONTRACT_NUMBER2 + ' от ' + CONTRACT_DATE + ' г.',
                        format_center_without_borders_bold_times_14)
@@ -946,7 +1059,7 @@ worksheet4.write('H8', 'конечное', format_center_with_borders_times_12)
 worksheet4.merge_range('I7:J8', 'Разность показаний', format_center_with_borders_times_12)
 worksheet4.merge_range('K7:K8', 'Коэффи-\nциент счетчика', format_center_with_borders_times_12)
 worksheet4.merge_range('L7:L8', 'Расход электроэнергии\n(кВтч)', format_center_with_borders_times_12)
-for cells in range(0, 7):
+for cells in range(0, 8):
     worksheet4.write(8, cells, cells + 1, format_center_with_borders_times_8)
 worksheet4.merge_range('I9:J9', '9', format_center_with_borders_times_8)
 worksheet4.write('K9', '10', format_center_with_borders_times_8)
@@ -981,7 +1094,7 @@ worksheet4.write('A16', 'Потери э/э оплачиваемые:', format_l
 worksheet4.merge_range('B16:L16', ACTIVE_LOSS2, format_right_with_borders_bold_times_12_number3)
 worksheet4.write('A17', 'ВСЕГО: от 150кВт до 670кВт', format_left_with_borders_bold_times_12)
 worksheet4.merge_range('B17:L17', (active_power_month55 + active_power_month56 + ACTIVE_LOSS2),
-                       format_right_with_borders_bold_times_12_number3)
+                       format_right_with_borders_bold_times_14_number3)
 worksheet4.merge_range('A18:L18', None, format_center_with_borders_times_12)
 worksheet4.merge_range('A19:A21', 'Потребители с макс. Мощностью менее 150кВт, СН-2',
                        format_left_with_borders_bold_times_12)
@@ -1009,7 +1122,7 @@ worksheet4.merge_range('A25:A27', 'Потери э/э оплачиваемые:'
 worksheet4.merge_range('B25:L27', ACTIVE_LOSS3, format_right_with_borders_bold_times_12_number3)
 worksheet4.merge_range('A28:A30', 'ИТОГО: менее 150кВт', format_left_with_borders_bold_times_12)
 worksheet4.merge_range('B28:L30', (active_power_month42 + ACTIVE_LOSS3),
-                       format_right_with_borders_bold_times_12_number3)
+                       format_right_with_borders_bold_times_14_number3)
 worksheet4.write('A31', None, format_center_with_borders_times_12)
 worksheet4.write('B31', None, format_center_with_borders_times_12)
 worksheet4.write('C31', None, format_center_with_borders_times_12)
