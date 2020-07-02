@@ -1093,8 +1093,8 @@ worksheet4.write('D13', DEVICE55, format_center_with_borders_times_12)
 worksheet4.write('D14', DEVICE56, format_center_with_borders_times_12)
 worksheet4.write('E13', device_number55, format_center_with_borders_times_12)
 worksheet4.write('E14', device_number56, format_center_with_borders_times_12)
-worksheet4.write('F13', date_time_begin_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
-worksheet4.write('F14', date_time_begin_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
+worksheet4.write('F13', date_time_end_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
+worksheet4.write('F14', date_time_end_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
 worksheet4.merge_range('G13:K13', 'по профилю потребителя', format_center_with_borders_times_12)
 worksheet4.merge_range('G14:K14', 'по профилю потребителя', format_center_with_borders_times_12)
 worksheet4.write('L13', active_power_month55, format_center_with_borders_times_12_number)
@@ -1124,7 +1124,7 @@ worksheet4.write('D22', DEVICE42, format_center_with_borders_times_12)
 worksheet4.write('D23', None, format_center_with_borders_times_12)
 worksheet4.write('E22', device_number42, format_center_with_borders_times_12)
 worksheet4.write('E23', None, format_center_with_borders_times_12)
-worksheet4.write('F22', date_time_begin_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
+worksheet4.write('F22', date_time_end_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
 worksheet4.write('F23', None, format_center_with_borders_times_12)
 worksheet4.merge_range('G22:K22', 'по профилю потребителя', format_center_with_borders_times_12)
 worksheet4.merge_range('G23:K23', None, format_center_with_borders_times_12)
@@ -1180,7 +1180,7 @@ workbook.close()
 # Отправка отчета по почте
 def send_email(addr_to, msg_subj, msg_text, files):
     addr_from = 'sa@tm-ankovo.ru'  # Отправитель
-    password = 'password'  # Пароль
+    password = 'h28pQ*'  # Пароль
 
     msg = MIMEMultipart()  # Создаем сообщение
     msg['From'] = addr_from  # Адресат
