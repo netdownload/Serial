@@ -170,6 +170,7 @@ def split_reactive_power(power_profile_answer):
 
 
 def get_start_memory(memory_from_device, delta_in_period):
+    print(memory_from_device)
     int_memory = int.from_bytes(memory_from_device, byteorder='big')
     start_memory = int_memory - delta_in_period * PERIOD_HEX
     if start_memory < 0:
@@ -210,6 +211,7 @@ def check_memory_bank(memory_bank_test, memory_test, date_test):
         time.sleep(DELAY)
     date_test_memory_bank = split_result_datetime(power_profile_request_test_hex)
     if date_test_memory_bank != date_test:
+        print("rotate")
         rotate_memory_bank()
     return 0
 
@@ -217,11 +219,13 @@ def check_memory_bank(memory_bank_test, memory_test, date_test):
 def rotate_memory_bank():
     # https://stackoverflow.com/questions/423379/using-global-variables-in-a-function
     global memory_bank
+    print("do_rotate")
     if memory_bank == MEMORY_BANK1:
         memory_bank = MEMORY_BANK2
+        return 0
     if memory_bank == MEMORY_BANK2:
         memory_bank = MEMORY_BANK1
-    return 0
+        return 0
 
 
 # Функция записывает считаные данные в базу
@@ -249,6 +253,7 @@ date_memory = convert_date(date_memory_answer_hex)
 check_memory_bank(memory_bank, memory_hex, date_memory)
 delta_period_int = delta_period(date_memory, get_last_date_from_database())
 memory_start = get_start_memory(memory_hex, delta_period_int)
+print(memory_bank)
 
 with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
                    bytesize=serial.EIGHTBITS, timeout=1) as ser:

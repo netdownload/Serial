@@ -211,9 +211,10 @@ def rotate_memory_bank():
     global memory_bank
     if memory_bank == MEMORY_BANK1:
         memory_bank = MEMORY_BANK2
+        return 0
     if memory_bank == MEMORY_BANK2:
         memory_bank = MEMORY_BANK1
-    return 0
+        return 0
 
 
 # Функция записывает считаные данные в базу
