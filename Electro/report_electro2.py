@@ -420,53 +420,12 @@ parser = create_parser()
 namespace = parser.parse_args()
 print(namespace)
 
-# date_time_begin = '2025-12-01 00:30:00'
-# # date_time_begin = '2025-' + namespace.date_begin + '-01 0:30:00'
-# date_time_begin_obj = datetime.datetime.strptime(date_time_begin, '%Y-%m-%d %H:%M:%S')
-# date_time_end = '2026-01-01 00:00:00'
-# # date_time_end = '2025-' + namespace.date_end + '-01 00:00:00'
-# date_time_end_obj = datetime.datetime.strptime(date_time_end, '%Y-%m-%d %H:%M:%S')
-
-current_year = datetime.datetime.now().year
-current_month = datetime.datetime.now().month
-
-date_time_begin = f"{current_year}-{namespace.date_begin}-01 0:30:00"
+# date_time_begin = '2024-12-01 00:30:00'
+date_time_begin = '2025-' + namespace.date_begin + '-01 0:30:00'
 date_time_begin_obj = datetime.datetime.strptime(date_time_begin, '%Y-%m-%d %H:%M:%S')
-
-specified_month = int(namespace.date_begin)
-
-# Автоматический расчет конечной даты с учетом перехода года
-# Добавляем 1 месяц к начальной дате
-# Если указанный месяц больше текущего, используем прошлый год
-if specified_month > current_month:
-    year_to_use = current_year - 1
-else:
-    year_to_use = current_year
-
-date_time_begin = f'{year_to_use}-{specified_month:02d}-01 00:30:00'
-date_time_begin_obj = datetime.datetime.strptime(date_time_begin, '%Y-%m-%d %H:%M:%S')
-
-# Автоматический расчет конечной даты с учетом перехода года
-if date_time_begin_obj.month == 12:
-    date_time_end_obj = datetime.datetime(
-        date_time_begin_obj.year + 1,
-        1,
-        1,
-        0,
-        0,
-        0
-    )
-else:
-    date_time_end_obj = datetime.datetime(
-        date_time_begin_obj.year,
-        date_time_begin_obj.month + 1,
-        1,
-        0,
-        0,
-        0
-    )
-
-date_time_end = date_time_end_obj.strftime('%Y-%m-%d %H:%M:%S')
+# date_time_end = '2025-01-01 00:00:00'
+date_time_end = '2025-' + namespace.date_end + '-01 00:00:00'
+date_time_end_obj = datetime.datetime.strptime(date_time_end, '%Y-%m-%d %H:%M:%S')
 
 check_database_connection()
 month_txt, year_txt, month_big_txt, power_month, power_month_begin, power_month_end = init_parameters(
@@ -496,17 +455,17 @@ power_answer_month_end = get_power_month_begin(COM56, DEVICE_ADDRESS56, power_mo
 active_power_end_month56 = get_active_power_from_hex(power_answer_month_end, 1)
 reactive_power_end_month56 = get_reactive_power_from_hex(power_answer_month_end, 1)
 
-check_com_port(COM42)
-device_number42 = get_device_number(COM42, DEVICE_ADDRESS42)
-power_answer_month = get_power_month_hex(COM42, DEVICE_ADDRESS42, power_month)
-active_power_month42 = get_active_power_from_hex(power_answer_month, RATIO42)
-reactive_power_month42 = get_reactive_power_from_hex(power_answer_month, RATIO42)
-power_answer_month_begin = get_power_month_begin(COM42, DEVICE_ADDRESS42, power_month_begin)
-active_power_begin_month42 = get_active_power_from_hex(power_answer_month_begin, 1)
-reactive_power_begin_month42 = get_reactive_power_from_hex(power_answer_month_begin, 1)
-power_answer_month_end = get_power_month_begin(COM42, DEVICE_ADDRESS42, power_month_end)
-active_power_end_month42 = get_active_power_from_hex(power_answer_month_end, 1)
-reactive_power_end_month42 = get_reactive_power_from_hex(power_answer_month_end, 1)
+# check_com_port(COM42)
+# device_number42 = get_device_number(COM42, DEVICE_ADDRESS42)
+# power_answer_month = get_power_month_hex(COM42, DEVICE_ADDRESS42, power_month)
+# active_power_month42 = get_active_power_from_hex(power_answer_month, RATIO42)
+# reactive_power_month42 = get_reactive_power_from_hex(power_answer_month, RATIO42)
+# power_answer_month_begin = get_power_month_begin(COM42, DEVICE_ADDRESS42, power_month_begin)
+# active_power_begin_month42 = get_active_power_from_hex(power_answer_month_begin, 1)
+# reactive_power_begin_month42 = get_reactive_power_from_hex(power_answer_month_begin, 1)
+# power_answer_month_end = get_power_month_begin(COM42, DEVICE_ADDRESS42, power_month_end)
+# active_power_end_month42 = get_active_power_from_hex(power_answer_month_end, 1)
+# reactive_power_end_month42 = get_reactive_power_from_hex(power_answer_month_end, 1)
 
 answer42 = get_power_values_from_database42(date_time_begin_obj, date_time_end_obj)
 answer55 = get_power_values_from_database55(date_time_begin_obj, date_time_end_obj)
@@ -827,7 +786,7 @@ worksheet.write('Y72', 'ИТОГО', format_left_bold)
 worksheet.write('Z72', power_active_sum_56, format_right_bold)
 
 worksheet.write('A73', 'Счетчик №')
-worksheet.write('B73', device_number42, format_right_without_borders_bold)
+# worksheet.write('B73', device_number42, format_right_without_borders_bold)
 worksheet.write('A74', 'Тр.тока (коэф)')
 worksheet.write('B74', RATIO42, bold)
 
@@ -1016,11 +975,11 @@ worksheet3.write('F10', RATIO56, format_center_bold)
 worksheet3.write('G10', reactive_power_month56, format_center_bold)
 worksheet3.write('A11', '1.5', format_center_bold)
 worksheet3.write('B11', DEVICE_NAME42_1, format_center_bold)
-worksheet3.write('C11', device_number42, format_center_bold)
-worksheet3.write('D11', active_power_end_month42, format_center_bold)
-worksheet3.write('E11', active_power_begin_month42, format_center_bold)
+# worksheet3.write('C11', device_number42, format_center_bold)
+# worksheet3.write('D11', active_power_end_month42, format_center_bold)
+# worksheet3.write('E11', active_power_begin_month42, format_center_bold)
 worksheet3.write('F11', RATIO42, format_center_bold)
-worksheet3.write('G11', active_power_month42, format_center_bold)
+# worksheet3.write('G11', active_power_month42, format_center_bold)
 worksheet3.write('A12', '2.', format_center_bold)
 worksheet3.merge_range('B12:F12', 'Потери э/э оплачиваемые активные', format_left_bold)
 worksheet3.write('G12', ACTIVE_LOSS, format_center_bold)
@@ -1044,7 +1003,9 @@ for cells in range(1, 7):
     worksheet3.write(17, cells, None, format_center_bold)
 worksheet3.write('A19', '4.2', format_center_bold)
 worksheet3.merge_range('B19:F19', 'ИТОГО ОБЩИЙ РАСХОД (С ПОТЕРЯМИ), АКТИВНЫЙ', format_left_bold)
-worksheet3.write('G19', active_power_month55 + active_power_month56 + active_power_month42 + ACTIVE_LOSS,
+# worksheet3.write('G19', active_power_month55 + active_power_month56 + active_power_month42 + ACTIVE_LOSS,
+#                  format_center_bold)
+worksheet3.write('G19', active_power_month55 + active_power_month56 + ACTIVE_LOSS,
                  format_center_bold)
 worksheet3.write('B20', None, format_center_bold)
 worksheet3.merge_range('B20:F20', 'ИТОГО ОБЩИЙ РАСХОД (С ПОТЕРЯМИ), РЕАКТИВНЫЙ', format_left_bold)
@@ -1163,19 +1124,19 @@ worksheet4.merge_range('B22:B23', 'РУ-0,4кВ КТП-100кВа', format_center
 worksheet4.merge_range('C22:C23', None, format_center_with_borders_times_12)
 worksheet4.write('D22', DEVICE42, format_center_with_borders_times_12)
 worksheet4.write('D23', None, format_center_with_borders_times_12)
-worksheet4.write('E22', device_number42, format_center_with_borders_times_12)
+# worksheet4.write('E22', device_number42, format_center_with_borders_times_12)
 worksheet4.write('E23', None, format_center_with_borders_times_12)
 worksheet4.write('F22', date_time_end_obj.strftime('%d.%m.%Y'), format_center_with_borders_times_12)
 worksheet4.write('F23', None, format_center_with_borders_times_12)
 worksheet4.merge_range('G22:K22', 'по профилю потребителя', format_center_with_borders_times_12)
 worksheet4.merge_range('G23:K23', None, format_center_with_borders_times_12)
-worksheet4.write('L22', active_power_month42, format_center_with_borders_times_12)
+# worksheet4.write('L22', active_power_month42, format_center_with_borders_times_12)
 worksheet4.write('L23', None, format_center_with_borders_times_12)
 worksheet4.merge_range('A25:A27', 'Потери э/э оплачиваемые:', format_left_with_borders_times_12)
 worksheet4.merge_range('B25:L27', ACTIVE_LOSS3, format_right_with_borders_bold_times_12_number3)
 worksheet4.merge_range('A28:A30', 'ИТОГО: менее 150кВт', format_left_with_borders_bold_times_12)
-worksheet4.merge_range('B28:L30', (active_power_month42 + ACTIVE_LOSS3),
-                       format_right_with_borders_bold_times_14_number3)
+# worksheet4.merge_range('B28:L30', (active_power_month42 + ACTIVE_LOSS3),
+#                        format_right_with_borders_bold_times_14_number3)
 worksheet4.write('A31', None, format_center_with_borders_times_12)
 worksheet4.write('B31', None, format_center_with_borders_times_12)
 worksheet4.write('C31', None, format_center_with_borders_times_12)
@@ -1209,7 +1170,9 @@ worksheet4.write('F34', None, format_center_with_borders_times_12)
 worksheet4.merge_range('G34:K34', None, format_center_with_borders_times_12)
 worksheet4.write('L34', None, format_center_with_borders_times_12)
 worksheet4.merge_range('A35:K35', 'ИТОГО по договору №ЭСК-29', format_left_with_borders_bold_times_14_bg_color)
-worksheet4.write('L35', (active_power_month55 + active_power_month56 + active_power_month42 + ACTIVE_LOSS),
+# worksheet4.write('L35', (active_power_month55 + active_power_month56 + active_power_month42 + ACTIVE_LOSS),
+#                  format_center_without_borders_bold_times_16_number4_bg_color)
+worksheet4.write('L35', (active_power_month55 + active_power_month56 + ACTIVE_LOSS),
                  format_center_without_borders_bold_times_16_number4_bg_color)
 worksheet4.merge_range('A37:L37', 'Генеральный директор____________________________________________________',
                        format_center_times_12)

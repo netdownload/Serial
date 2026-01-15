@@ -198,6 +198,14 @@ with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_EVEN, stopbits=serial.ST
     time.sleep(DELAY)
     ser.readall()
     time.sleep(DELAY)
+    ser.readall()
+    time.sleep(DELAY)
+    ser.readall()
+    time.sleep(DELAY)
+    ser.readall()
+    time.sleep(DELAY)
+    ser.readall()
+    time.sleep(DELAY)
 
     for hours in range(delta_hours(date_now, date_last)):
         time.sleep(DELAY)

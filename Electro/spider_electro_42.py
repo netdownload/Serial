@@ -28,6 +28,7 @@ DELAY = 0.2
 # Настройка COM порта в Linux
 # COM = '/dev/ttyr01'
 COM = 'COM6'
+# COM = 'COM13'
 COM_SPEED = 9600
 DATABASE_HOST = '10.1.1.99'
 DATABASE_USER = 'user'

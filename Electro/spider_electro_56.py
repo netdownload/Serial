@@ -27,13 +27,13 @@ DATE_MEMORY_REQUEST = DEVICE_NUMBER + b'\x08\x13'
 DELAY = 0.2
 # Настройка COM порта в Linux
 # COM = '/dev/ttyr02'
-COM = 'COM7'
+COM = 'COM13'
 COM_SPEED = 9600
 DATABASE_HOST = '10.1.1.99'
 DATABASE_USER = 'user'
 DATABASE_PASSWORD = 'qwerty123'
 DATABASE = 'resources'
-MEMORY_BANK1 = b'\x06\x03'
+MEMORY_BANK1 = b'\x06\x83'
 MEMORY_BANK2 = b'\x06\x83'
 PERIOD = b'\x1E'
 PERIOD_HEX = 16
@@ -83,7 +83,7 @@ def convert_date(date_memory_answer_hex):
 
 def convert_memory(date_memory_answer_hex):
     memory_block_for_check = date_memory_answer_hex[3]
-    if memory_block_for_check == 9:
+    if memory_block_for_check == 0 or memory_block_for_check == 9 or memory_block_for_check == 1:
         memory_answer_text1 = "{0:#0{1}x}".format(date_memory_answer_hex[1], 4)[3]
         memory_answer_text2 = "{0:#0{1}x}".format(date_memory_answer_hex[2], 4)[2:4]
         memory_answer_text3 = "{0:#0{1}x}".format(date_memory_answer_hex[3], 4)[2]
@@ -249,11 +249,13 @@ check_com_port()
 
 date_memory_answer_hex = get_date_memory_from_device()
 memory_hex = convert_memory(date_memory_answer_hex)
+# memory_hex = b'\x15\x70'
 date_memory = convert_date(date_memory_answer_hex)
 check_memory_bank(memory_bank, memory_hex, date_memory)
 delta_period_int = delta_period(date_memory, get_last_date_from_database())
+# delta_period_int = 28
 memory_start = get_start_memory(memory_hex, delta_period_int)
-print(memory_bank)
+# memory_start = b'\x15\x70'
 
 with serial.Serial(COM, COM_SPEED, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
                    bytesize=serial.EIGHTBITS, timeout=1) as ser:
